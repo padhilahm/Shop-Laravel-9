@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+// Route::get('/', function () {
+//     return view('home.index');
+// });
+
+Route::resource('product', ProductController::class);
+
+Route::controller(ProductController::class)->group(function () {
+    Route::get('', 'index');
+    // Route::get('/product/{id}', 'index');
+    // Route::post('/orders', 'store');
 });
