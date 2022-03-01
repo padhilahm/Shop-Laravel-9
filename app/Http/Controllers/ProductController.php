@@ -16,7 +16,8 @@ class ProductController extends Controller
     public function index()
     {
         $data = array(
-            'products' => Product::paginate(8), 
+            'products' => Product::orderBy('created_at', 'desc')
+                                ->paginate(8), 
         );
         return view('home.index', $data);
     }
