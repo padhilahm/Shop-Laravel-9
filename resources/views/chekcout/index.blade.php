@@ -1,0 +1,2 @@
+@dd($buyer)
+{{-- {{ $buyer->name }} --}}

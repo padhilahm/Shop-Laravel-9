@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Http\Request;
+// use App\Http\Requests\StoreProductRequest;
+// use App\Http\Requests\UpdateProductRequest;
 
 class ProductController extends Controller
 {
@@ -20,6 +21,8 @@ class ProductController extends Controller
                                 ->paginate(8), 
         );
         return view('home.index', $data);
+        // $products = Product::all();
+        // return view('products', compact('products'));
     }
 
     /**
@@ -32,13 +35,47 @@ class ProductController extends Controller
         //
     }
 
+    public function cart()
+    {
+        return view('product.cart');
+        // return view('cart');
+        // return 'cart';
+    }
+    
+    public function checkout()
+    {
+        return view('product.checkout');
+    }
+
+    public function addToCart($id)
+    {
+        $product = Product::findOrFail($id);
+          
+        $cart = session()->get('cart', []);
+  
+        if(isset($cart[$id])) {
+            $cart[$id]['quantity']++;
+        } else {
+            $cart[$id] = [
+                "name" => $product->name,
+                "quantity" => 1,
+                "price" => $product->price,
+                "image" => $product->image
+            ];
+        }
+          
+        session()->put('cart', $cart);
+        return redirect()->back()->with('success', 'Product added to cart successfully!');
+    }
+
     /**
      * Store a newly created resource in storage.
      *
      * @param  \App\Http\Requests\StoreProductRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreProductRequest $request)
+    // public function store(StoreProductRequest $request)
+    public function store(Request $request)
     {
         //
     }
@@ -75,9 +112,14 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(Request $request, Product $product)
     {
-        //
+        if($request->id && $request->quantity){
+            $cart = session()->get('cart');
+            $cart[$request->id]["quantity"] = $request->quantity;
+            session()->put('cart', $cart);
+            session()->flash('success', 'Cart updated successfully');
+        }
     }
 
     /**
@@ -89,5 +131,17 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         //
+    }
+
+    public function remove(Request $request)
+    {
+        if($request->id) {
+            $cart = session()->get('cart');
+            if(isset($cart[$request->id])) {
+                unset($cart[$request->id]);
+                session()->put('cart', $cart);
+            }
+            session()->flash('success', 'Product removed successfully');
+        }
     }
 }

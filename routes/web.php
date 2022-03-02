@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +25,17 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 // });
 
 Route::resource('product', ProductController::class);
+// Route::get('cart', [ProductController::class, 'cart']);
+
+// cart
+Route::get('cart', [ProductController::class, 'cart'])->name('cart');
+Route::get('add-to-cart/{id}', [ProductController::class, 'addToCart'])->name('add.to.cart');
+Route::patch('update-cart', [ProductController::class, 'update'])->name('update.cart');
+Route::delete('remove-from-cart', [ProductController::class, 'remove'])->name('remove.from.cart');
+
+// checkout
+Route::get('checkout-buyer', [CheckoutController::class, 'checkoutBuyer']);
+Route::post('checkout-buyer', [CheckoutController::class, 'storeBuyer']);
 
 // login
 Route::get('login', [LoginController::class, 'index'])->name('login')->middleware('guest');;

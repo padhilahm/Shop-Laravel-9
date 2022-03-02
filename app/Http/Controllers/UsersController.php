@@ -46,7 +46,7 @@ class UsersController extends Controller
     public function store(Request $request)
     {
         $rules = array(
-            'email' => 'required', 
+            'email' => 'required|unique:users', 
             'name' => 'required',
             'password' => 'required'
         );
