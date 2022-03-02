@@ -8,7 +8,7 @@
                 <li class="@if ($url === 'products') active  @endif"><a href="/products"><span class="glyphicon glyphicon-list"></span>Products</a></li>
                 <li class="@if ($url === 'categories') active  @endif"><a href="/categories"><span class="glyphicon glyphicon-align-justify"></span>Categories</a></li>
                 <li class="@if ($url === 'users') active  @endif"><a href="/users"><span class="glyphicon glyphicon-user"></span>Users</a></li>
-
+                <li class="@if ($url === 'setting') active  @endif"><a href="/setting"><span class="glyphicon glyphicon-cog"></span>Setting</a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
     </nav>

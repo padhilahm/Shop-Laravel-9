@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,10 @@ Route::resource('categories', CategoriesController::class)->middleware('auth');
 
 // users
 Route::resource('users', UsersController::class)->middleware('auth');
+
+// setting
+Route::resource('setting', SettingController::class)->middleware('auth');
+Route::put('setting-update', [SettingController::class, 'updateSetting'])->middleware('auth');
 
 // grouping
 Route::controller(ProductController::class)->group(function () {

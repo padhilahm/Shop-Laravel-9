@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreSettingRequest;
 use App\Http\Requests\UpdateSettingRequest;
 
@@ -15,7 +16,13 @@ class SettingController extends Controller
      */
     public function index()
     {
-        //
+        $data = array(
+            'url' => 'setting', 
+            'setting' => Setting::exists(),
+            'clientKey' => Setting::where('name', 'client-key')->first(),
+            'serverKey' => Setting::where('name', 'server-key')->first()
+        );
+        return view('setting.index', $data);
     }
 
     /**
@@ -34,9 +41,27 @@ class SettingController extends Controller
      * @param  \App\Http\Requests\StoreSettingRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreSettingRequest $request)
+    public function store(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'serverKey' => 'required',
+            'clientKey' => 'required'
+        ]);
+
+        $data[] = [
+            'name' => 'client-key',
+            'value' => $validate['clientKey'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $data[] = [
+            'name' => 'server-key',
+            'value' => $validate['serverKey'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        Setting::insert($data);
+        return redirect('setting')->with('success', 'Settings has been saved');
     }
 
     /**
@@ -68,9 +93,30 @@ class SettingController extends Controller
      * @param  \App\Models\Setting  $setting
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateSettingRequest $request, Setting $setting)
+    public function updateSetting(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'serverKey' => 'required',
+            'clientKey' => 'required'
+        ]);
+        
+        $data[] = [
+            'value' => $validate['clientKey'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $data[] = [
+            'value' => $validate['serverKey'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        Setting::where('name', 'client-key')
+                    ->update($data[0]);
+        Setting::where('name', 'server-key')
+                    ->update($data[1]);
+        
+        return redirect('setting')->with('success', 'Settings has been saved');
     }
 
     /**
