@@ -18,7 +18,7 @@
                     <th style="width:10%"></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="dataView">
                 @php $total = 0 @endphp
                 @if(session('cart'))
                 @foreach(session('cart') as $id => $details)
@@ -26,11 +26,14 @@
                 <tr data-id="{{ $id }}">
                     <td data-th="Product">
                         <div class="row">
+
                             <div class="col-sm-3 hidden-xs">
                                 @if ($details['image'])
-                                <img src="/storage/{{ $details['image'] }}" width="100" height="100" class="img-responsive" />
+                                <img src="/storage/{{ $details['image'] }}" width="100" height="100"
+                                    class="img-responsive" />
                                 @else
-                                <img src="https://dummyimage.com/100x100/dee2e6/6c757d.jpg" width="100" height="100" class="img-responsive" />
+                                <img src="https://dummyimage.com/100x100/dee2e6/6c757d.jpg" width="100" height="100"
+                                    class="img-responsive" />
                                 @endif
                             </div>
                             <div class="col-sm-9">
@@ -41,11 +44,13 @@
                     <td data-th="Price">Rp.{{ $details['price'] }}</td>
                     <td data-th="Quantity">
                         <input type="number" value="{{ $details['quantity'] }}"
-                            class="form-control quantity update-cart" />
+                            class="form-control quantity" id="quantity{{ $id }}" onchange="updateCart({{ $id }})" />
+                        {{-- <input type="number" value="{{ $details['quantity'] }}"
+                            class="form-control quantity update-cart" /> --}}
                     </td>
                     <td data-th="Subtotal" class="text-center">Rp.{{ $details['price'] * $details['quantity'] }}</td>
                     <td class="actions" data-th="">
-                        <button class="btn btn-danger btn-sm remove-from-cart"><i class="fa fa-trash-o"></i></button>
+                        <button class="btn btn-danger btn-sm remove-from-cart" onclick="deleteCart({{ $id }})"><i class="fa fa-trash-o"></i></button>
                     </td>
                 </tr>
                 @endforeach
@@ -54,7 +59,7 @@
             <tfoot>
                 <tr>
                     <td colspan="5" class="text-right">
-                        <h3><strong>Total Rp.{{ $total }}</strong></h3>
+                        <h3><strong id="total">Total Rp.{{ $total }}</strong></h3>
                     </td>
                 </tr>
                 <tr>
@@ -72,44 +77,44 @@
 
 @section('scripts')
 <script type="text/javascript">
-    $(".update-cart").change(function (e) {
-        e.preventDefault();
-  
-        var ele = $(this);
-  
+    function updateCart(id) {
+        var id = id;
+        var quantity = $('#quantity'+id).val();
         $.ajax({
             url: '{{ route('update.cart') }}',
             method: "patch",
+            type: 'JSON',
             data: {
                 _token: '{{ csrf_token() }}', 
-                id: ele.parents("tr").attr("data-id"), 
-                quantity: ele.parents("tr").find(".quantity").val()
+                id: id,
+                quantity: quantity
             },
             success: function (response) {
-               window.location.reload();
+                $('#dataView').html(response.dataView);
+                $('#total').html(`Total Rp.${response.total}`);
             }
         });
-    });
-  
-    $(".remove-from-cart").click(function (e) {
-        e.preventDefault();
-  
-        var ele = $(this);
-  
+    }
+    
+    function deleteCart(id) {
+        var id = id;
         if(confirm("Are you sure want to remove?")) {
             $.ajax({
                 url: '{{ route('remove.from.cart') }}',
                 method: "DELETE",
+                type: 'JSON',
                 data: {
                     _token: '{{ csrf_token() }}', 
-                    id: ele.parents("tr").attr("data-id")
+                    id: id
                 },
                 success: function (response) {
-                    window.location.reload();
+                    $('#dataView').html(response.dataView);
+                    $('#total').html(`Total Rp.${response.total}`);
+                    $('#totalCart').html(response.totalCart);
                 }
             });
-        }
-    });
+        }   
+    }
   
 </script>
 @endsection

@@ -30,13 +30,16 @@ Route::resource('product', ProductController::class);
 
 // cart
 Route::get('cart', [ProductController::class, 'cart'])->name('cart');
-Route::get('add-to-cart/{id}', [ProductController::class, 'addToCart'])->name('add.to.cart');
+Route::post('add-to-cart', [ProductController::class, 'addToCart'])->name('add.to.cart');
+// Route::get('add-to-cart/{id}', [ProductController::class, 'addToCart'])->name('add.to.cart');
 Route::patch('update-cart', [ProductController::class, 'update'])->name('update.cart');
 Route::delete('remove-from-cart', [ProductController::class, 'remove'])->name('remove.from.cart');
 
 // checkout
 Route::get('checkout-buyer', [CheckoutController::class, 'checkoutBuyer']);
-Route::post('checkout-buyer', [CheckoutController::class, 'storeBuyer']);
+// Route::post('checkout-buyer', [CheckoutController::class, 'storeBuyer']);
+Route::post('snap-token', [CheckoutController::class, 'token']);
+Route::post('snap-finish', [CheckoutController::class, 'finish']);
 
 // login
 Route::get('login', [LoginController::class, 'index'])->name('login')->middleware('guest');;

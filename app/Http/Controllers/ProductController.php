@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
 // use App\Http\Requests\StoreProductRequest;
 // use App\Http\Requests\UpdateProductRequest;
@@ -47,25 +48,35 @@ class ProductController extends Controller
         return view('product.checkout');
     }
 
-    public function addToCart($id)
+    public function addToCart(Request $request)
     {
+        $id = $request->id;
+        $quantity = $request->quantity;
+
         $product = Product::findOrFail($id);
           
         $cart = session()->get('cart', []);
   
         if(isset($cart[$id])) {
-            $cart[$id]['quantity']++;
+            $cart[$id]['quantity'] += $quantity;
         } else {
             $cart[$id] = [
                 "name" => $product->name,
-                "quantity" => 1,
+                "quantity" => $quantity,
                 "price" => $product->price,
                 "image" => $product->image
             ];
         }
-          
         session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Product added to cart successfully!');
+        // return redirect()->back()->with('success', 'Product added to cart successfully!');
+        // return count((array) session('cart'));
+        $data = array(
+            'totalCart' => count((array) session('cart')), 
+            'quantity' => $quantity,
+            'alert' => "Product added to cart successfully!"
+            // 'alert' => "<div class='alert alert-success'>Product added to cart successfully!</div>"
+        );
+        return response()->json($data, 200);
     }
 
     /**
@@ -118,8 +129,52 @@ class ProductController extends Controller
             $cart = session()->get('cart');
             $cart[$request->id]["quantity"] = $request->quantity;
             session()->put('cart', $cart);
-            session()->flash('success', 'Cart updated successfully');
+            // session()->flash('success', 'Cart updated successfully');
         }
+        $total = 0;
+        if (session('cart')) {
+            foreach (session('cart') as $id => $details) {
+                $total += $details['price'] * $details['quantity'];
+    
+                if ($details['image']) {
+                    $image = "<img src='/storage/".$details['image']."' width='100' height='100' class='img-responsive' />";
+                }else{
+                    $image = "<img src='https://dummyimage.com/100x100/dee2e6/6c757d.jpg' width='100' height='100' class='img-responsive' />";
+                }
+                $dataView[] = "<tr data-id='$id'>
+                <td data-th='Product'>
+                    <div class='row'>
+                        <div class='col-sm-3 hidden-xs'>
+                            $image
+                        </div>
+                        <div class='col-sm-9'>
+                            <h4 class='nomargin'>".$details['name']."</h4>
+                        </div>
+                    </div>
+                </td>
+                <td data-th='Price'>Rp.".$details['price']."</td>
+                <td data-th='Quantity'>
+                    <input type='number' value='".$details['quantity']."'
+                        class='form-control quantity' id='quantity$id' onchange='updateCart($id)' />
+                </td>
+                <td data-th='Subtotal' class='text-center'>Rp.".$details['price'] * $details['quantity']."</td>
+                <td class='actions' data-th=''>
+                    <button class='btn btn-danger btn-sm remove-from-cart' onclick='deleteCart($id)'><i class='fa fa-trash-o'></i></button>
+                </td>
+                </tr>";
+            }
+           
+            $data = [
+                'dataView' => $dataView,
+                'total' => $total
+            ];
+        }else{
+            $data = [
+                'dataView' => '',
+                'total' => $total
+            ];
+        }
+        return response()->json($data, 200);
     }
 
     /**
@@ -141,7 +196,53 @@ class ProductController extends Controller
                 unset($cart[$request->id]);
                 session()->put('cart', $cart);
             }
-            session()->flash('success', 'Product removed successfully');
+            // session()->flash('success', 'Product removed successfully');
         }
+        $total = 0;
+        if (session('cart')) {
+            foreach (session('cart') as $id => $details) {
+                $total += $details['price'] * $details['quantity'];
+    
+                if ($details['image']) {
+                    $image = "<img src='/storage/".$details['image']."' width='100' height='100' class='img-responsive' />";
+                }else{
+                    $image = "<img src='https://dummyimage.com/100x100/dee2e6/6c757d.jpg' width='100' height='100' class='img-responsive' />";
+                }
+                $dataView[] = "<tr data-id='$id'>
+                <td data-th='Product'>
+                    <div class='row'>
+                        <div class='col-sm-3 hidden-xs'>
+                            $image
+                        </div>
+                        <div class='col-sm-9'>
+                            <h4 class='nomargin'>".$details['name']."</h4>
+                        </div>
+                    </div>
+                </td>
+                <td data-th='Price'>Rp.".$details['price']."</td>
+                <td data-th='Quantity'>
+                    <input type='number' value='".$details['quantity']."'
+                        class='form-control quantity' id='quantity$id' onchange='updateCart($id)' />
+                </td>
+                <td data-th='Subtotal' class='text-center'>Rp.".$details['price'] * $details['quantity']."</td>
+                <td class='actions' data-th=''>
+                    <button class='btn btn-danger btn-sm remove-from-cart' onclick='deleteCart($id)'><i class='fa fa-trash-o'></i></button>
+                </td>
+                </tr>";
+            }
+           
+            $data = [
+                'dataView' => $dataView,
+                'total' => $total,
+                'totalCart' => count((array) session('cart'))
+            ];
+        }else{
+            $data = [
+                'dataView' => '',
+                'total' => $total,
+                'totalCart' => count((array) session('cart'))
+            ];
+        }
+        return response()->json($data, 200);
     }
 }
