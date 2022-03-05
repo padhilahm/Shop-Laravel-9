@@ -1,8 +1,5 @@
 @extends('layouts.app')
 
-<!-- Navigation-->
-@include('layouts.nav')
-
 @section('container')
 
 <div class="container px-4 px-lg-5 mt-5">

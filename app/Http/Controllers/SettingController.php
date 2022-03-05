@@ -20,7 +20,9 @@ class SettingController extends Controller
             'url' => 'setting', 
             'setting' => Setting::exists(),
             'clientKey' => Setting::where('name', 'client-key')->first(),
-            'serverKey' => Setting::where('name', 'server-key')->first()
+            'serverKey' => Setting::where('name', 'server-key')->first(),
+            'latitude' => Setting::where('name', 'latitude')->first(),
+            'longitude' => Setting::where('name', 'longitude')->first(),
         );
         return view('setting.index', $data);
     }
@@ -45,7 +47,9 @@ class SettingController extends Controller
     {
         $validate = $request->validate([
             'serverKey' => 'required',
-            'clientKey' => 'required'
+            'clientKey' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required'
         ]);
 
         $data[] = [
@@ -97,7 +101,9 @@ class SettingController extends Controller
     {
         $validate = $request->validate([
             'serverKey' => 'required',
-            'clientKey' => 'required'
+            'clientKey' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required'
         ]);
         
         $data[] = [
@@ -110,11 +116,25 @@ class SettingController extends Controller
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
+        $data[] = [
+            'value' => $validate['latitude'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $data[] = [
+            'value' => $validate['longitude'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
         Setting::where('name', 'client-key')
                     ->update($data[0]);
         Setting::where('name', 'server-key')
                     ->update($data[1]);
+        Setting::where('name', 'latitude')
+                    ->update($data[2]);
+        Setting::where('name', 'longitude')
+                    ->update($data[3]);
         
         return redirect('setting')->with('success', 'Settings has been saved');
     }

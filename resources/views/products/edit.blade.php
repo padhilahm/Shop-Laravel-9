@@ -1,4 +1,6 @@
 @extends('layouts-admin.app')
+<link rel="stylesheet" type="text/css" href="/css/trix.css">
+	<script type="text/javascript" src="/js/trix.js"></script>
 
 @section('container')
 <div class="col-md-2 sidebar">
@@ -47,7 +49,9 @@
                 <div class="form-group row">
                     <label for="inputprice3" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
-                        <textarea name="description" id="description" rows="6" class="form-control">{{ old('description', $product->description) }}</textarea>
+                        {{-- <textarea name="description" id="description" rows="6" class="form-control">{{ old('description', $product->description) }}</textarea> --}}
+                        <input id="x" type="hidden" name="description" id="description" value="{{ old('description', $product->description) }}">
+                        <trix-editor input="x"></trix-editor>
                         @error('description')
                             <small id="emailHelp" class="form-text text-danger">{{ $message }}</small>
                         @enderror

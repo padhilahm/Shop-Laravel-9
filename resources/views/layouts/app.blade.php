@@ -16,12 +16,31 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    {{-- <link href="{{ asset('css/cart.css') }}" rel="stylesheet"> --}}
+    {{--
+    <link href="{{ asset('css/cart.css') }}" rel="stylesheet"> --}}
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="/css/styles.css" rel="stylesheet" />
+
+    @if (Request::is('transaction-check') || (Request::is('cart') && session('cart') == null))
+    <style>
+        #footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 2.5rem;
+            /* Footer height */
+        }
+    </style>
+    @endif
 </head>
 
 <body>
+    @include('layouts.nav')
+
+    @if (Request::is('') || Request::is('/') || Request::is('product'))
+    <!-- Header-->
+    @include('layouts.head')
+    @endif
 
     <!-- Section-->
 
@@ -30,7 +49,7 @@
 
     </section>
     <!-- Footer-->
-    <footer class="py-5 bg-dark">
+    <footer class="py-5 bg-dark" id="footer">
         <div class="container">
             <p class="m-0 text-center text-white">Copyright &copy; Your Website {{ date('Y') }}</p>
         </div>

@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SettingController;
@@ -40,6 +42,10 @@ Route::get('checkout-buyer', [CheckoutController::class, 'checkoutBuyer']);
 // Route::post('checkout-buyer', [CheckoutController::class, 'storeBuyer']);
 Route::post('snap-token', [CheckoutController::class, 'token']);
 Route::post('snap-finish', [CheckoutController::class, 'finish']);
+// check transaction
+Route::get('transaction-check', [CheckoutController::class, 'checkTransaction']);
+Route::post('transaction-check', [CheckoutController::class, 'check']);
+
 
 // login
 Route::get('login', [LoginController::class, 'index'])->name('login')->middleware('guest');;
@@ -49,11 +55,17 @@ Route::post('login', [LoginController::class, 'authenticate']);
 // dashboard
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth');
 
+// payment
+Route::resource('payments', PaymentController::class)->middleware('auth');
+
 // product
 Route::resource('products', ProductsController::class)->middleware('auth');
 
 // categories
 Route::resource('categories', CategoriesController::class)->middleware('auth');
+
+// buyer
+Route::resource('buyers', BuyerController::class)->middleware('auth');
 
 // users
 Route::resource('users', UsersController::class)->middleware('auth');

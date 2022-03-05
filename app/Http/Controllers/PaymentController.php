@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
+use App\Models\Buyer;
+use Symfony\Component\Console\Input\Input;
 
 class PaymentController extends Controller
 {
@@ -15,7 +19,23 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        //
+        $no = 5;
+        if (isset($_GET['search'])) {
+            $search = $_GET['search'];
+            $payments = Payment::where('id', 'like', "%$search%")
+                            ->orderByDesc('created_at')
+                            ->paginate($no);
+        }else{
+            $payments = Payment::orderByDesc('created_at')
+                            ->paginate($no);
+        }
+
+        $data = array(
+            'url' => 'payments',
+            'payments' => $payments, 
+            'no' => $no
+        );
+        return view('payments.index', $data);
     }
 
     /**
@@ -47,7 +67,19 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        //
+        $buyer = Buyer::findOrFail($payment->buyer_id);
+        $products = DB::table('products')
+                        ->join('transactions', 'products.id', '=', 'transactions.product_id')
+                        ->where('transactions.payment_id', '=', $payment->id)
+                        ->selectRaw('products.name, transactions.price, transactions.quantity')
+                        ->get();
+        $data = array(
+            'url' => 'payments',
+            'payment' => $payment,
+            'buyer' => $buyer,
+            'products' => $products
+        );
+        return view('payments.show', $data);
     }
 
     /**
@@ -81,6 +113,9 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        //
+        Transaction::where('payment_id', $payment->id)
+                    ->delete();
+        Payment::destroy($payment->id);
+        return redirect('payments')->with('success', 'Payment has been deleted');
     }
 }

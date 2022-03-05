@@ -32,10 +32,44 @@ class CheckoutController extends Controller
         //
     }
 
-    public function checkoutBuyer()
+    public function checkTransaction()
     {
         $data = array(
-            'clientKey' => Setting::where('name', 'client-key')->first()->value, 
+            'clientKey' => Setting::where('name', 'client-key')->first()->value,
+        );
+        return view('chekcout.check-transaction', $data);
+    }
+
+    public function check(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'paymentId' => 'required'
+        ]);
+        $id = $request->paymentId;
+
+        if ($validator->fails()) {
+            $data = array(
+                'code' => 400,
+                'error' => $validator->errors()->all()
+            );
+            return response()->json($data, 200);
+        } else {
+            $payment = Payment::find($id);
+
+            $data = array(
+                'code' => 200,
+                'data' => $payment,
+                'error' => ''
+            );
+            return response()->json($data, 200);
+        }
+    }
+
+    public function checkoutBuyer()
+    {
+        // $distance = $this->distance(-3.448323, 114.871273, -3.443305, 114.84782);
+        $data = array(
+            'clientKey' => Setting::where('name', 'client-key')->first()->value
         );
         return view('chekcout.checkout-buyer', $data);
     }
@@ -107,8 +141,25 @@ class CheckoutController extends Controller
         //
     }
 
+    public function distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $earthRadius = 6371000)
+    {
+        // convert from degrees to radians
+        $latFrom = deg2rad($latitudeFrom);
+        $lonFrom = deg2rad($longitudeFrom);
+        $latTo = deg2rad($latitudeTo);
+        $lonTo = deg2rad($longitudeTo);
 
-    public function token(Request $request) 
+        $lonDelta = $lonTo - $lonFrom;
+        $a = pow(cos($latTo) * sin($lonDelta), 2) +
+            pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
+        $b = sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+
+        $angle = atan2(sqrt($a), $b);
+        return $angle * $earthRadius;
+    }
+
+
+    public function token(Request $request)
     {
         $validate = [
             'email' => $request->email,
@@ -119,39 +170,134 @@ class CheckoutController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'phone' => 'required|numeric',
-            'name' => 'required'
+            'name' => 'required',
+            'address' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required'
         ]);
 
         if ($validator->fails()) {
-            // $data = [
-            //     'email' => $validator->errors()->all()[0],
-            //     'phone' => $validator->errors()->all()[1],
-            //     'name' => $validator->errors()->all(),
-            //     'code' => 400
-            // ];
             $data = array(
                 'code' => 400,
-                'error' => $validator->errors()->all() 
+                'error' => $validator->errors()->all()
             );
             return response()->json($data, 200);
         }
 
         // Session::forget('cart');
-        if (session('cart')) {
+        if (session('cart') == null) {
+            $data = array(
+                'code' => 400,
+                'error' => 'cart'
+            );
+            return response()->json($data, 200);
+            // return redirect('/cart');
+        }
+        
+        $latitudeTo = Setting::where('name', 'latitude')->first()->value;
+        $longitudeTo = Setting::where('name', 'longitude')->first()->value;
+        $latitudeFrom = $request->latitude;
+        $longitudeFrom = $request->longitude;
+        $distance = $this->distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)/1000;
+        if ($distance > 20) {
+            $data = array(
+                'code' => 400,
+                'error' => 'over'
+            );
+            return response()->json($data, 200);
+        }
+
+        if ($distance >= 15) {
+            $shipping = 15000;
+        }elseif ($distance > 10) {
+            $shipping = 10000;
+        }elseif($distance > 5){
+            $shipping = 5000;
+        }else {
+            $shipping = 0;
+        }
+
+        // error_log('masuk ke snap token dari ajax');
+        $paymentId = rand();
+        $midtrans = new Midtrans;
+
+        $total = 0;
+        foreach (session('cart') as $id => $details) {
+            $total += $details['price'] * $details['quantity'];
+            $items[] = array(
+                'id'        => $id,
+                'price'     => $details['price'],
+                'quantity'  => $details['quantity'],
+                'name'      => $details['name']
+            );
+        }
+
+        $total += $shipping;
+
+        $items[] = array(
+            'id'        => 'shipping',
+            'price'     => $shipping,
+            'quantity'  => 1,
+            'name'      => 'Ongkir'
+        );
+
+        $transaction_details = array(
+            'order_id'      => $paymentId,
+            'gross_amount'  => $total
+        );
+
+        // Populate customer's Info
+        $customer_details = array(
+            'first_name'      => $validate['name'],
+            'email'           => $validate['email'],
+            'phone'           => $validate['phone']
+        );
+
+        // Data yang akan dikirim untuk request redirect_url.
+        $credit_card['secure'] = true;
+        //ser save_card true to enable oneclick or 2click
+        //$credit_card['save_card'] = true;
+
+        $time = time();
+        $custom_expiry = array(
+            'start_time' => date("Y-m-d H:i:s O", $time),
+            'unit'       => 'hour',
+            'duration'   => 2
+        );
+
+        $transaction_data = array(
+            'transaction_details' => $transaction_details,
+            'item_details'       => $items,
+            'customer_details'   => $customer_details,
+            'credit_card'        => $credit_card,
+            'expiry'             => $custom_expiry
+        );
+
+        try {
+            $snap_token = $midtrans->getSnapToken($transaction_data);
+
             $buyer = Buyer::where('email', $request->email)
                 ->where('phone', $request->phone)
                 ->first();
-    
+
             if ($buyer) {
+                Buyer::where('id', $buyer->id)
+                    ->update($validate);
+
                 $dataPayment = array(
-                    'id' => rand(),
-                    'buyer_id' => $buyer->id
+                    'id' => $paymentId,
+                    'buyer_id' => $buyer->id,
+                    'token' => $snap_token,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'shipping' => $shipping,
+                    'address' => $request->address
                 );
                 Payment::create($dataPayment);
                 foreach (session('cart') as $id => $details) {
                     $dataTransaction[] = array(
                         'product_id' => $id,
-                        'payment_id' => $dataPayment['id'],
+                        'payment_id' => $paymentId,
                         'price' => $details['price'],
                         'quantity' => $details['quantity'],
                         'created_at' => date('Y-m-d H:i:s'),
@@ -161,18 +307,23 @@ class CheckoutController extends Controller
                 Transaction::insert($dataTransaction);
             } else {
                 Buyer::create($validate);
-                $buyer = Buyer::where('email', $request->email)
-                    ->where('phone', $request->phone)
+                $buyer = Buyer::where('email', $validate['email'])
+                    ->where('phone', $validate['phone'])
                     ->first();
                 $dataPayment = array(
-                    'id' => rand(),
-                    'buyer_id' => $buyer->id
+                    'id' => $paymentId,
+                    'buyer_id' => $buyer->id,
+                    'token' => $snap_token,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'shipping' => $shipping,
+                    'address' => $request->address
                 );
                 Payment::create($dataPayment);
                 foreach (session('cart') as $id => $details) {
                     $dataTransaction[] = array(
                         'product_id' => $id,
-                        'payment_id' => $dataPayment['id'],
+                        'payment_id' => $paymentId,
                         'price' => $details['price'],
                         'quantity' => $details['quantity'],
                         'created_at' => date('Y-m-d H:i:s'),
@@ -182,65 +333,10 @@ class CheckoutController extends Controller
                 Transaction::insert($dataTransaction);
             }
 
-            error_log('masuk ke snap token dari ajax');
-            $midtrans = new Midtrans;
-            
-            $total = 0;
-            foreach (session('cart') as $id => $details) {
-                $total += $details['price'] * $details['quantity'];
-                $items[] = array(
-                    'id'        => $id,
-                    'price'     => $details['price'],
-                    'quantity'  => $details['quantity'],
-                    'name'      => $details['name']
-                );
-            }
-
-            $transaction_details = array(
-                'order_id'      => $dataPayment['id'],
-                'gross_amount'  => $total
-            );
-    
-            // Populate customer's Info
-            $customer_details = array(
-                'first_name'      => $validate['name'],
-                'email'           => $validate['email'],
-                'phone'           => $validate['phone']
-                );
-    
-            // Data yang akan dikirim untuk request redirect_url.
-            $credit_card['secure'] = true;
-            //ser save_card true to enable oneclick or 2click
-            //$credit_card['save_card'] = true;
-    
-            $time = time();
-            $custom_expiry = array(
-                'start_time' => date("Y-m-d H:i:s O", $time),
-                'unit'       => 'hour', 
-                'duration'   => 2
-            );
-            
-            $transaction_data = array(
-                'transaction_details'=> $transaction_details,
-                'item_details'       => $items,
-                'customer_details'   => $customer_details,
-                'credit_card'        => $credit_card,
-                'expiry'             => $custom_expiry
-            );
-        
-            try
-            {
-                $snap_token = $midtrans->getSnapToken($transaction_data);
-                return $snap_token;
-            } 
-            catch (Exception $e) 
-            {   
-                return $e->getMessage;
-            }
-        }else{
-            return redirect('/cart');
+            return $snap_token;
+        } catch (Exception $e) {
+            return $e->getMessage;
         }
-        
     }
 
     public function finish(Request $request)
@@ -253,12 +349,15 @@ class CheckoutController extends Controller
             'status' => $result['status_code']
         ];
         Payment::where('id', $result['order_id'])
-                ->update($data);
+            ->update($data);
+
+        return redirect('/transaction-check?no=' . $result['order_id']);
 
         // echo $result->status_message . '<br>';
-        echo 'RESULT <br><pre>';
-        var_dump($result);
-        echo '</pre>' ;
+        // echo  $result['order_id'];
+        // echo 'RESULT <br><pre>';
+        // var_dump($result);
+        // echo '</pre>' ;
     }
 
     public function notification()
@@ -268,9 +367,9 @@ class CheckoutController extends Controller
         $json_result = file_get_contents('php://input');
         $result = json_decode($json_result);
 
-        if($result){
+        if ($result) {
             // $notif = $midtrans->status($result->order_id);
         }
-        error_log(print_r($result,TRUE));
+        error_log(print_r($result, TRUE));
     }
 }

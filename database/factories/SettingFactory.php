@@ -17,7 +17,10 @@ class SettingFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->name(),
+            'price' => 10000,
+            'description' => 'Lorem',
+            'category_id' => 1
         ];
     }
 }

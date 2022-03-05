@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buyer;
-use App\Http\Requests\StoreBuyerRequest;
-use App\Http\Requests\UpdateBuyerRequest;
+use Illuminate\Http\Request;
 
 class BuyerController extends Controller
 {
@@ -15,7 +14,13 @@ class BuyerController extends Controller
      */
     public function index()
     {
-        //
+        $buyers = Buyer::orderByDesc('created_at')
+                    ->paginate();
+        $data = array(
+            'url' => 'buyers', 
+            'buyers' => $buyers
+        );
+        return view('buyers.index', $data);
     }
 
     /**
@@ -34,7 +39,7 @@ class BuyerController extends Controller
      * @param  \App\Http\Requests\StoreBuyerRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreBuyerRequest $request)
+    public function store(Request $request)
     {
         //
     }
@@ -58,7 +63,11 @@ class BuyerController extends Controller
      */
     public function edit(Buyer $buyer)
     {
-        //
+        $data = array(
+            'url' => 'buyers', 
+            'buyer' => $buyer 
+        );
+        return view('buyers.edit', $data);
     }
 
     /**
@@ -68,9 +77,16 @@ class BuyerController extends Controller
      * @param  \App\Models\Buyer  $buyer
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateBuyerRequest $request, Buyer $buyer)
+    public function update(Request $request, Buyer $buyer)
     {
-        //
+        $validate = $request->validate([
+            'email' => 'required|email',
+            'phone' => 'required|numeric',
+            'name' => 'required'
+        ]);
+        Buyer::where('id', $buyer->id)
+                ->update($validate);
+        return redirect('/buyers')->with('success', 'Buyer has been updated');
     }
 
     /**
@@ -81,6 +97,8 @@ class BuyerController extends Controller
      */
     public function destroy(Buyer $buyer)
     {
-        //
+        Buyer::destroy($buyer->id);
+        return redirect('buyers')->with('success', 'Buyer has been deleted');
+
     }
 }
