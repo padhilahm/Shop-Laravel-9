@@ -1,4 +1,4 @@
-
+{{-- @dd($shippingPrices->count()) --}}
 @extends('layouts.app')
 <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}">
 </script>
@@ -37,50 +37,73 @@
 
             </div>
             <div class="form-group col-md-6">
-                <label for="inputPassword4">Phone</label>
-                <input type="number" class="form-control" id="phone" name="phone" placeholder="Phone">
+                <label for="inputPassword4">No HP</label>
+                <input type="number" class="form-control" id="phone" name="phone" placeholder="No HP">
 
                 <small id="phoneError" class="form-text text-danger"></small>
 
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="inputEmail4">Nama</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Nama">
+                <small id="nameError" class="form-text text-danger"></small>
+
+            </div>
+            <div class="form-group col-md-6">
+                <label for="inputPassword4">Jenis Pengiriman</label>
+                <select name="shippingType" id="shippingType" class="form-control" onchange="shippingType()">
+                    <option value=""> - Pilih - </option>
+                    <option value="1">Kurir</option>
+                    <option value="2">Ambil Sendiri</option>
+                </select>
+
+                <small id="shippingTypeError" class="form-text text-danger"></small>
+
+            </div>
+        </div>
+
+        {{-- <div class="form-group">
             <label for="inputAddress">Name</label>
             <input type="text" class="form-control" id="name" name="name" placeholder="Name">
             <small id="nameError" class="form-text text-danger"></small>
 
-        </div>
-        
-        <div class="form-group">
-            <label for="inputAddress">Address</label>
-            <textarea name="address" id="address" class="form-control"></textarea>
-            <small id="addressError" class="form-text text-danger"></small>
-        </div>
+        </div> --}}
 
-        <div class="form-group">
-            <label for="inputAddress">Maps</label>
-            <div id="map"></div>
-            <small id="addressError" class="form-text text-danger"></small>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="inputEmail4">Latitude</label>
-                <input type="text" class="form-control" id="latitude" name="latitude">
-
-                <small id="latitudeError" class="form-text text-danger"></small>
-
+        <div id="courierType" style="display:none">
+            <div class="form-group">
+                <label for="inputAddress">Alamat</label>
+                <textarea name="address" id="address" class="form-control"></textarea>
+                <small id="addressError" class="form-text text-danger"></small>
             </div>
-            <div class="form-group col-md-6">
-                <label for="inputPassword4">Longitude</label>
-                <input type="text" class="form-control" id="longitude" name="longitude">
-                <small id="longitudeError" class="form-text text-danger"></small>
 
+            <div class="form-group">
+                <label for="inputAddress">Pilih Lokasi Pengantaran</label>
+                <div id="map"></div>
+                <small id="addressError" class="form-text text-danger"></small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="inputEmail4">Latitude</label>
+                    <input type="text" class="form-control" id="latitude" name="latitude">
+
+                    <small id="latitudeError" class="form-text text-danger"></small>
+
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="inputPassword4">Longitude</label>
+                    <input type="text" class="form-control" id="longitude" name="longitude">
+                    <small id="longitudeError" class="form-text text-danger"></small>
+
+                </div>
             </div>
         </div>
+
 
         <div class="text-right">
-            <button type="submit" id="pay-button" class="btn btn-outline-dark mb-5">Pay</button>
+            <button type="submit" id="pay-button" class="btn btn-outline-dark mb-5">Bayar</button>
         </div>
         {{--
     </form> --}}
@@ -94,11 +117,47 @@
 
 @section('scripts')
 <script>
+    function shippingType() {
+        var type = $('#shippingType').val();
+        if (type == 1) {
+            $('#courierType').css('display','block');
+            maps();
+        }else{
+            $('#courierType').css('display','none');
+        }
+    }
+</script>
+
+<script>
+    function distance(lat1, lon1, lat2, lon2) {
+        var R = 6371; // Radius of the earth in km
+        var dLat = deg2rad(lat2-lat1);  // deg2rad below
+        var dLon = deg2rad(lon2-lon1); 
+        var a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2)
+            ; 
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        var d = R * c; // Distance in km
+        return d;
+        // return lat1;
+    }
+
+    function deg2rad(deg) {
+        return deg * (Math.PI/180)
+    }
+</script>
+
+
+
+<script>
     // $(document).ready(function() {
     //     getSetting();
     // });
-    
-    var map = L.map('map').setView([-0.21973, 118.91602], 5);
+
+    function maps() {
+        var map = L.map('map').setView([-0.21973, 118.91602], 5);
     
     mapLink =
     '<a href="https://openstreetmap.org">OpenStreetMap</a>';
@@ -112,8 +171,8 @@
     map.locate({setView: true, maxZoom: 16});
     function onLocationFound(e) {
         var radius = e.accuracy;
-        // L.marker(e.latlng, {title: 'lokasi saya', icon: markIcon}).addTo(map)
-        // .bindPopup("lokasi saya sekarang").openPopup();
+        L.marker(e.latlng, {title: 'lokasi saya', icon: markIcon}).addTo(map)
+        .bindPopup("lokasi saya sekarang").openPopup();
         L.circle(e.latlng, radius).addTo(map);
     }
     map.on('locationfound', onLocationFound);
@@ -140,20 +199,43 @@
         var coord = e.latlng.toString().split(',');
         var lat = coord[0].split('(');
         var lng = coord[1].split(')');
-            // alert(`lokasi ditetapkan dengan kordinat ${lat[1]}, ${lng[0]}`);
+        var distance_ = distance(lat[1], lng[0], {{ $latitude }}, {{ $longitude }});
+        
+        if (distance_ <= {{ $shippingMax }}) {
+
+            if (distance_ >= {{ $shippingPrices[0]->distince }} && distance_ <= {{ $shippingPrices[1]->distince }}) {
+                var shipping = {{ $shippingPrices[0]->price }};
+            }
+
+            @for ($i = 1 ; $i < $shippingPrices->count(); $i++)
+            @if ($i == $shippingPrices->count()-1)
+                if (distance_ > {{ $shippingPrices[$i]->distince }} ) {
+                    var shipping = {{ $shippingPrices[$i]->price }};
+                }
+            @else
+                if (distance_ > {{ $shippingPrices[$i]->distince }} && distance_ <= {{ $shippingPrices[$i+1]->distince }}) {
+                    var shipping = {{ $shippingPrices[$i]->price }};
+                }
+            @endif
+            @endfor
             
-            if (theMarker != undefined) {
-                  map.removeLayer(theMarker);
-            };
-            theMarker = L.marker([lat[1], lng[0]]).addTo(map);
-            
-            $('#latitude').val(lat[1]);
-            $('#longitude').val(lng[0]);
+            alert(`Biaya kurir untuk lokasi Anda Rp.${shipping}`);
+        }else{
+            alert('Mohon maaf lokasi Anda masih belum terjangkau untuk pengantaran secara langsung');
+        }
+
+        if (theMarker != undefined) {
+                map.removeLayer(theMarker);
+        };
+        theMarker = L.marker([lat[1], lng[0]]).addTo(map);
+        
+        $('#latitude').val(lat[1]);
+        $('#longitude').val(lng[0]);
         });
+    }
 </script>
 
 <script type="text/javascript">
-
     function printErrorMsg (msg) {
         $(".print-error-msg").find("ul").html('');
         $(".print-error-msg").css('display','block');
@@ -162,12 +244,6 @@
         });
     }
     
-    function dataView(msg) {
-        $('#rowData').find('#product').html('');
-        $.each( msg, function( key, value ) {
-            $("#rowData").find("#product").append(`<li>${value}</li>`);
-        });
-    }
 
 $('#pay-button').click(function (event) {
     event.preventDefault();
@@ -180,6 +256,7 @@ $('#pay-button').click(function (event) {
     var address = $('#address').val();
     var latitude = $('#latitude').val();
     var longitude = $('#longitude').val();
+    var shippingType = $('#shippingType').val();
     
     $.ajax({
         url: '/snap-token',
@@ -192,13 +269,14 @@ $('#pay-button').click(function (event) {
             name: name,
             latitude: latitude,
             longitude: longitude,
-            address: address
+            address: address,
+            shippingType: shippingType
         },
         success: function(data) {
             // console.log(data);
             if (data.code === 400) {
                 $('#pay-button').removeAttr("disabled");
-            $('#pay-button').html(`Pay`);
+                $('#pay-button').html(`Bayar`);
                 if (data.error == 'cart') {
                     console.log(data.error);
                     window.location.href = '/'+data.error;
@@ -238,9 +316,10 @@ $('#pay-button').click(function (event) {
                         $("#payment-form").submit();
                         }
                 });
+                $(".print-error-msg").css('display','none');
             }
             $('#pay-button').removeAttr("disabled");
-            $('#pay-button').html(`Pay`);
+            $('#pay-button').html(`Bayar`);
         }
     });
 });

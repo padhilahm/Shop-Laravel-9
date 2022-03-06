@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Buyer;
 use App\Models\Payment;
 use App\Models\Setting;
+use App\Models\ShippingPrice;
 use App\Models\Transaction;
 use App\Veritrans\Midtrans;
 use Illuminate\Http\Request;
@@ -69,7 +70,11 @@ class CheckoutController extends Controller
     {
         // $distance = $this->distance(-3.448323, 114.871273, -3.443305, 114.84782);
         $data = array(
-            'clientKey' => Setting::where('name', 'client-key')->first()->value
+            'clientKey' => Setting::where('name', 'client-key')->first()->value,
+            'latitude' => Setting::where('name', 'latitude')->first()->value,
+            'longitude' => Setting::where('name', 'longitude')->first()->value,
+            'shippingMax' => Setting::where('name', 'shipping-max')->first()->value,
+            'shippingPrices' => ShippingPrice::orderBy('distince')->get()
         );
         return view('chekcout.checkout-buyer', $data);
     }
@@ -158,7 +163,6 @@ class CheckoutController extends Controller
         return $angle * $earthRadius;
     }
 
-
     public function token(Request $request)
     {
         $validate = [
@@ -167,15 +171,25 @@ class CheckoutController extends Controller
             'name' => $request->name
         ];
 
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'phone' => 'required|numeric',
-            'name' => 'required',
-            'address' => 'required',
-            'latitude' => 'required',
-            'longitude' => 'required'
-        ]);
-
+        if ($request->shippingType == 1) {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'phone' => 'required|numeric',
+                'name' => 'required',
+                'address' => 'required',
+                'latitude' => 'required',
+                'longitude' => 'required',
+                'shippingType' => 'required'
+            ]);
+        }else{
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'phone' => 'required|numeric',
+                'name' => 'required',
+                'shippingType' => 'required'
+            ]);
+        }
+        
         if ($validator->fails()) {
             $data = array(
                 'code' => 400,
@@ -194,27 +208,49 @@ class CheckoutController extends Controller
             // return redirect('/cart');
         }
         
-        $latitudeTo = Setting::where('name', 'latitude')->first()->value;
-        $longitudeTo = Setting::where('name', 'longitude')->first()->value;
-        $latitudeFrom = $request->latitude;
-        $longitudeFrom = $request->longitude;
-        $distance = $this->distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)/1000;
-        if ($distance > 20) {
-            $data = array(
-                'code' => 400,
-                'error' => 'over'
-            );
-            return response()->json($data, 200);
-        }
+        if($request->shippingType == 1){
+            $latitudeTo = Setting::where('name', 'latitude')->first()->value;
+            $longitudeTo = Setting::where('name', 'longitude')->first()->value;
+            $latitudeFrom = $request->latitude;
+            $longitudeFrom = $request->longitude;
+            $distance = $this->distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)/1000;
 
-        if ($distance >= 15) {
-            $shipping = 15000;
-        }elseif ($distance > 10) {
-            $shipping = 10000;
-        }elseif($distance > 5){
-            $shipping = 5000;
-        }else {
-            $shipping = 0;
+            $shippingMax = Setting::where('name', 'shipping-max')->first()->value;
+            $shippingPrices = ShippingPrice::orderBy('distince')->get();
+
+            if ($distance > $shippingMax) {
+                $data = array(
+                    'code' => 400,
+                    'error' => 'over'
+                );
+                return response()->json($data, 200);
+            }
+            
+            // menghitung harga per jarak ditentutkan
+            if ($distance >= $shippingPrices[0]->distince && $distance <= $shippingPrices[1]->distince) {
+                $shipping = $shippingPrices[0]->price;
+            }
+            for ($i = 1 ; $i < $shippingPrices->count(); $i++){
+                if ($i == $shippingPrices->count()-1) {
+                    if ($distance > $shippingPrices[$i]->distince){
+                        $shipping = $shippingPrices[$i]->price;
+                    }
+                }else{
+                    if ($distance > $shippingPrices[$i]->distince && $distance <= $shippingPrices[$i+1]->distince){
+                        $shipping = $shippingPrices[$i]->price;
+                    }
+                }
+            }
+
+            // if ($distance >= 15) {
+            //     $shipping = 15000;
+            // }elseif ($distance > 10) {
+            //     $shipping = 10000;
+            // }elseif($distance > 5){
+            //     $shipping = 5000;
+            // }else {
+            //     $shipping = 0;
+            // }
         }
 
         // error_log('masuk ke snap token dari ajax');
@@ -232,14 +268,15 @@ class CheckoutController extends Controller
             );
         }
 
-        $total += $shipping;
-
-        $items[] = array(
-            'id'        => 'shipping',
-            'price'     => $shipping,
-            'quantity'  => 1,
-            'name'      => 'Ongkir'
-        );
+        if ($request->shippingType == 1) {
+            $total += $shipping;
+            $items[] = array(
+                'id'        => 'shipping',
+                'price'     => $shipping,
+                'quantity'  => 1,
+                'name'      => 'Ongkir'
+            );
+        }
 
         $transaction_details = array(
             'order_id'      => $paymentId,
@@ -283,17 +320,29 @@ class CheckoutController extends Controller
             if ($buyer) {
                 Buyer::where('id', $buyer->id)
                     ->update($validate);
+                
+                if ($request->shippingType == 1) {
+                    $dataPayment = array(
+                        'id' => $paymentId,
+                        'buyer_id' => $buyer->id,
+                        'payment_type_id' => $request->shippingType,
+                        'token' => $snap_token,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'shipping' => $shipping,
+                        'address' => $request->address
+                    );
+                }else{
+                    $dataPayment = array(
+                        'id' => $paymentId,
+                        'buyer_id' => $buyer->id,
+                        'payment_type_id' => $request->shippingType,
+                        'token' => $snap_token,
+                    );
+                }
 
-                $dataPayment = array(
-                    'id' => $paymentId,
-                    'buyer_id' => $buyer->id,
-                    'token' => $snap_token,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                    'shipping' => $shipping,
-                    'address' => $request->address
-                );
                 Payment::create($dataPayment);
+
                 foreach (session('cart') as $id => $details) {
                     $dataTransaction[] = array(
                         'product_id' => $id,
@@ -310,15 +359,25 @@ class CheckoutController extends Controller
                 $buyer = Buyer::where('email', $validate['email'])
                     ->where('phone', $validate['phone'])
                     ->first();
-                $dataPayment = array(
-                    'id' => $paymentId,
-                    'buyer_id' => $buyer->id,
-                    'token' => $snap_token,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                    'shipping' => $shipping,
-                    'address' => $request->address
-                );
+                if ($request->shippingType == 1) {
+                    $dataPayment = array(
+                        'id' => $paymentId,
+                        'buyer_id' => $buyer->id,
+                        'payment_type_id' => $request->shippingType,
+                        'token' => $snap_token,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'shipping' => $shipping,
+                        'address' => $request->address
+                    );
+                }else{
+                    $dataPayment = array(
+                        'id' => $paymentId,
+                        'buyer_id' => $buyer->id,
+                        'payment_type_id' => $request->shippingType,
+                        'token' => $snap_token,
+                    );
+                }
                 Payment::create($dataPayment);
                 foreach (session('cart') as $id => $details) {
                     $dataTransaction[] = array(
@@ -332,7 +391,6 @@ class CheckoutController extends Controller
                 }
                 Transaction::insert($dataTransaction);
             }
-
             return $snap_token;
         } catch (Exception $e) {
             return $e->getMessage;

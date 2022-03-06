@@ -9,7 +9,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ShippingPriceController;
 use App\Http\Controllers\UsersController;
+use App\Models\ShippingPrice;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -69,6 +71,10 @@ Route::resource('buyers', BuyerController::class)->middleware('auth');
 
 // users
 Route::resource('users', UsersController::class)->middleware('auth');
+
+// shipping price
+Route::resource('shipping-price', ShippingPriceController::class)->middleware('auth');
+Route::post('update-shipping-max', [ShippingPriceController::class, 'updateShippingMax'])->middleware('auth');
 
 // setting
 Route::resource('setting', SettingController::class)->middleware('auth');

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Setting;
+use App\Models\ShippingPrice;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -38,6 +39,50 @@ class DatabaseSeeder extends Seeder
             'name' => 'longitude',
             'value' => '114.84437'
         ]);
+        Setting::create([
+            'name' => 'address',
+            'value' => 'Banjarbaru'
+        ]);
+        Setting::create([
+            'name' => 'shipping-max',
+            'value' => '20'
+        ]);
+        Setting::create([
+            'name' => 'shipping-price',
+            'value' => '5000'
+        ]);
+        Setting::create([
+            'name' => 'email',
+            'value' => 'padhilahm@padhil.my.id'
+        ]);
+        Setting::create([
+            'name' => 'smtp-host',
+            'value' => 'mail.padhil.my.id'
+        ]);
+        Setting::create([
+            'name' => 'smtp-port',
+            'value' => '465'
+        ]);
+        Setting::create([
+            'name' => 'password',
+            'value' => 'HIL~U)gSa_dz'
+        ]);
 
+        ShippingPrice::create([
+            'distince' => 0,
+            'price' => 0
+        ]);
+        ShippingPrice::create([
+            'distince' => 5,
+            'price' => 5000
+        ]);
+        ShippingPrice::create([
+            'distince' => 10,
+            'price' => 10000
+        ]);
+        ShippingPrice::create([
+            'distince' => 15,
+            'price' => 15000
+        ]);
     }
 }
