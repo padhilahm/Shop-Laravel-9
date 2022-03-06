@@ -31,6 +31,7 @@
                         <th scope="col">#</th>
                         <th scope="col">Name</th>
                         <th scope="col">Price</th>
+                        <th scope="col">Stock</th>
                         <th scope="col">Category</th>
                         <th scope="col">Action</th>
                     </tr>
@@ -43,7 +44,8 @@
                     <tr>
                         <th scope="row">{{ ++$i }}</th>
                         <td>{{ $product->name }}</td>
-                        <td>{{ $product->price }}</td>
+                        <td>Rp.{{ number_format($product->price) }}</td>
+                        <td>{{ $product->stock }}</td>
                         <td>{{ $product->category }}</td>
                         <td><a href="/products/{{ $product->id }}/edit"><button class="text-warning">Edit</button></a> <form action="/products/{{ $product->id }}"
                                 method="POST">

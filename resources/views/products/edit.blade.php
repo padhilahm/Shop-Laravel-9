@@ -47,6 +47,15 @@
                     </div>
                 </div>
                 <div class="form-group row">
+                    <label for="inputprice3" class="col-sm-2 col-form-label">Stock</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="stock" name="stock" placeholder="stock" value="{{ old('stock', $product->stock) }}">
+                        @error('stock')
+                            <small id="emailHelp" class="form-text text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+                </div>
+                <div class="form-group row">
                     <label for="inputprice3" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
                         {{-- <textarea name="description" id="description" rows="6" class="form-control">{{ old('description', $product->description) }}</textarea> --}}

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('category_id');
             $table->string('name');
             $table->bigInteger('price');
-            $table->integer('stok');
+            $table->integer('stock');
             $table->string('image')->nullable();
             $table->text('description');
             $table->timestamps();

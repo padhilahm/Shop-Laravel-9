@@ -47,7 +47,7 @@
                     <tr>
                         <td>{{ $shippingPrice->distince }} KM</td>
                         <td>Rp.{{ number_format($shippingPrice->price) }}</td>
-                        <td><a href="/shippingPrices/{{ $shippingPrice->id }}/edit"><button class="text-warning">Edit</button></a> <form action="/shippingPrices/{{ $shippingPrice->id }}"
+                        <td><a href="/shipping-price/{{ $shippingPrice->id }}/edit"><button class="text-warning">Edit</button></a> <form action="/shipping-price/{{ $shippingPrice->id }}"
                                 method="POST">
                                 @csrf
                                 @method('delete')

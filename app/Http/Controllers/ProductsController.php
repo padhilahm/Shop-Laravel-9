@@ -20,7 +20,7 @@ class ProductsController extends Controller
         $no = 5;
         $product = DB::table('products')
                     ->join('categories', 'products.category_id', '=', 'categories.id')
-                    ->selectRaw('products.name, products.price, products.id, categories.name as category')
+                    ->selectRaw('products.name, products.stock, products.price, products.id, categories.name as category')
                     ->orderBy('products.created_at', 'desc')
                     ->paginate($no);
 
@@ -59,7 +59,8 @@ class ProductsController extends Controller
             'price' => 'required',
             'description' => 'required',
             'image' => 'image|file|max:1024',
-            'category_id' => 'required'
+            'category_id' => 'required',
+            'stock' => 'required'
         ];
         $validate = $request->validate($rules);
         if ($request->file('image')) {
@@ -91,7 +92,7 @@ class ProductsController extends Controller
     {
         $product = DB::table('products')
                     ->join('categories', 'products.category_id', '=', 'categories.id')
-                    ->selectRaw('products.name, products.description, products.price, products.id, categories.name as category_name, categories.id as category_id, products.image')
+                    ->selectRaw('products.name, products.stock, products.description, products.price, products.id, categories.name as category_name, categories.id as category_id, products.image')
                     ->whereRaw("products.id = $product->id")
                     ->first();
         $categories = DB::table('categories')
@@ -118,7 +119,8 @@ class ProductsController extends Controller
             'price' => 'required',
             'description' => 'required',
             'image' => 'image|file|max:1024',
-            'category_id' => 'required'
+            'category_id' => 'required',
+            'stock' => 'required'
         ];
         $validate = $request->validate($rules);
         if ($request->file('image')) {

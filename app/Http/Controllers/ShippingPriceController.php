@@ -82,7 +82,11 @@ class ShippingPriceController extends Controller
      */
     public function edit(ShippingPrice $shippingPrice)
     {
-        //
+        $data = array(
+            'url' => 'shipping-price', 
+            'shippingPrice' => $shippingPrice
+        );
+        return view('shipping-price.edit', $data);
     }
 
     /**
@@ -94,7 +98,15 @@ class ShippingPriceController extends Controller
      */
     public function update(Request $request, ShippingPrice $shippingPrice)
     {
-        //
+        $validate = $request->validate([
+            'distince' => 'required|numeric',
+            'price' => 'required|numeric'
+        ]);
+
+        ShippingPrice::where('id', $shippingPrice->id)
+                        ->update($validate);
+        return redirect('shipping-price')->with('success', 'Shipping price has been updated');
+        
     }
 
     /**
@@ -105,6 +117,7 @@ class ShippingPriceController extends Controller
      */
     public function destroy(ShippingPrice $shippingPrice)
     {
-        //
+        ShippingPrice::destroy($shippingPrice->id);
+        return redirect('shipping-price')->with('success', 'Shipping price has been deleted');
     }
 }
