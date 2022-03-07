@@ -44,6 +44,10 @@ Route::get('checkout-buyer', [CheckoutController::class, 'checkoutBuyer']);
 // Route::post('checkout-buyer', [CheckoutController::class, 'storeBuyer']);
 Route::post('snap-token', [CheckoutController::class, 'token']);
 Route::post('snap-finish', [CheckoutController::class, 'finish']);
+Route::post('checkout-distince', [CheckoutController::class, 'distancePost']);
+// Route::get('checkout-distince/{latFrom}/{longFrom}/{latTo}/{longTo}', [CheckoutController::class, 'distance']);
+// Route::get('checkout-distince', [CheckoutController::class, 'distance']);
+
 // check transaction
 Route::get('transaction-check', [CheckoutController::class, 'checkTransaction']);
 Route::post('transaction-check', [CheckoutController::class, 'check']);

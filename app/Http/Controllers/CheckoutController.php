@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use Exception;
 use App\Models\Buyer;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Setting;
-use App\Models\ShippingPrice;
 use App\Models\Transaction;
 use App\Veritrans\Midtrans;
 use Illuminate\Http\Request;
+use App\Models\ShippingPrice;
 // use Illuminate\Validation\Validator;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 use phpDocumentor\Reflection\PseudoTypes\False_;
 
 class CheckoutController extends Controller
@@ -56,10 +58,29 @@ class CheckoutController extends Controller
             return response()->json($data, 200);
         } else {
             $payment = Payment::find($id);
+            $products = DB::table('products')
+                        ->join('transactions', 'products.id', '=', 'transactions.product_id')
+                        ->where('transactions.payment_id', '=', $id)
+                        ->selectRaw('products.name, transactions.price, transactions.quantity')
+                        ->get();
+            $buyer = DB::table('buyers')
+                        ->join('payments', 'buyers.id', '=', 'payments.buyer_id')
+                        ->where('payments.id', '=', $id)
+                        ->selectRaw('buyers.name, buyers.phone, buyers.email')
+                        ->first();
+            $latitude = Setting::where('name', 'latitude')->first()->value;
+            $longitude = Setting::where('name', 'longitude')->first()->value;
+            $shop = array(
+                'address' => Setting::where('name', 'address')->first()->value, 
+                'maps' => "https://www.google.com/maps/search/?api=1&query=$latitude%2C$longitude"
+            );
 
             $data = array(
                 'code' => 200,
-                'data' => $payment,
+                'dataPayment' => $payment,
+                'dataBuyer' => $buyer,
+                'dataProducts' => $products,
+                'dataShop' => $shop,
                 'error' => ''
             );
             return response()->json($data, 200);
@@ -69,6 +90,7 @@ class CheckoutController extends Controller
     public function checkoutBuyer()
     {
         // $distance = $this->distance(-3.448323, 114.871273, -3.443305, 114.84782);
+        session()->forget('overStock');
         $data = array(
             'clientKey' => Setting::where('name', 'client-key')->first()->value,
             'latitude' => Setting::where('name', 'latitude')->first()->value,
@@ -162,6 +184,64 @@ class CheckoutController extends Controller
         $angle = atan2(sqrt($a), $b);
         return $angle * $earthRadius;
     }
+    
+    public function distancePost(Request $request)
+    {
+        $latitudeFrom = $request->latitudeFrom;
+        $longitudeFrom = $request->longitudeFrom;
+        $latitudeTo = $request->latitudeTo;
+        $longitudeTo = $request->longitudeTo;
+        $earthRadius = 6371000;
+
+        // convert from degrees to radians
+        $latFrom = deg2rad($latitudeFrom);
+        $lonFrom = deg2rad($longitudeFrom);
+        $latTo = deg2rad($latitudeTo);
+        $lonTo = deg2rad($longitudeTo);
+
+        $lonDelta = $lonTo - $lonFrom;
+        $a = pow(cos($latTo) * sin($lonDelta), 2) +
+            pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
+        $b = sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+
+        $angle = atan2(sqrt($a), $b);
+        $distance = ($angle * $earthRadius) / 1000;
+
+        $shippingMax = Setting::where('name', 'shipping-max')->first()->value;
+        $shippingPrices = ShippingPrice::orderBy('distince')->get();
+
+        if ($distance > $shippingMax) {
+            $data = array(
+                'code' => 400,
+                'priceShipping' => 0,
+                'message' => 'Mohon maaf lokasi Anda masih belum terjangkau untuk pengantaran secara langsung'
+            );
+            return response()->json($data, 200);
+        }
+
+        // menghitung harga per jarak ditentukan
+        if ($distance >= $shippingPrices[0]->distince && $distance <= $shippingPrices[1]->distince) {
+            $shipping = $shippingPrices[0]->price;
+        }
+        for ($i = 1 ; $i < $shippingPrices->count(); $i++){
+            if ($i == $shippingPrices->count()-1) {
+                if ($distance > $shippingPrices[$i]->distince){
+                    $shipping = $shippingPrices[$i]->price;
+                }
+            }else{
+                if ($distance > $shippingPrices[$i]->distince && $distance <= $shippingPrices[$i+1]->distince){
+                    $shipping = $shippingPrices[$i]->price;
+                }
+            }
+        }
+
+        $data = array(
+            'code' => 200,
+            'priceShipping' => $shipping,
+            'message' => 'Biaya pengantaran untuk lokasi Anda Rp.'.$shipping,
+        );
+        return response()->json($data, 200);
+    }
 
     public function token(Request $request)
     {
@@ -189,6 +269,14 @@ class CheckoutController extends Controller
                 'shippingType' => 'required'
             ]);
         }
+
+        if ($request->shippingType != 1 and $request->shippingType != 2) {
+            $data = array(
+                'code' => 400,
+                'error' => ''
+            );
+            return response()->json($data, 200);
+        }
         
         if ($validator->fails()) {
             $data = array(
@@ -206,6 +294,19 @@ class CheckoutController extends Controller
             );
             return response()->json($data, 200);
             // return redirect('/cart');
+        }
+
+        // cek stock
+        foreach (session('cart') as $id => $details) {
+            $productStock = Product::find($id)->stock;
+            if ($productStock < $details['quantity']) {
+                $data = array(
+                    'code' => 400,
+                    'error' => 'cart'
+                );
+                session()->put('overStock', 'Jumlah pembelian '.$details['name'].' melebihi stok yang ada, stok tersedia '.$productStock);
+                return response()->json($data, 200);
+            }
         }
         
         if($request->shippingType == 1){
@@ -226,7 +327,7 @@ class CheckoutController extends Controller
                 return response()->json($data, 200);
             }
             
-            // menghitung harga per jarak ditentutkan
+            // menghitung harga per jarak ditentukan
             if ($distance >= $shippingPrices[0]->distince && $distance <= $shippingPrices[1]->distince) {
                 $shipping = $shippingPrices[0]->price;
             }
@@ -242,15 +343,6 @@ class CheckoutController extends Controller
                 }
             }
 
-            // if ($distance >= 15) {
-            //     $shipping = 15000;
-            // }elseif ($distance > 10) {
-            //     $shipping = 10000;
-            // }elseif($distance > 5){
-            //     $shipping = 5000;
-            // }else {
-            //     $shipping = 0;
-            // }
         }
 
         // error_log('masuk ke snap token dari ajax');
@@ -325,7 +417,7 @@ class CheckoutController extends Controller
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
-                        'payment_type_id' => $request->shippingType,
+                        'shipping_type_id' => $request->shippingType,
                         'token' => $snap_token,
                         'latitude' => $request->latitude,
                         'longitude' => $request->longitude,
@@ -336,7 +428,7 @@ class CheckoutController extends Controller
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
-                        'payment_type_id' => $request->shippingType,
+                        'shipping_type_id' => $request->shippingType,
                         'token' => $snap_token,
                     );
                 }
@@ -352,6 +444,9 @@ class CheckoutController extends Controller
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                     );
+
+                    Product::where('id', $id)
+                            ->decrement('stock', $details['quantity']);
                 }
                 Transaction::insert($dataTransaction);
             } else {
@@ -363,7 +458,7 @@ class CheckoutController extends Controller
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
-                        'payment_type_id' => $request->shippingType,
+                        'shipping_type_id' => $request->shippingType,
                         'token' => $snap_token,
                         'latitude' => $request->latitude,
                         'longitude' => $request->longitude,
@@ -374,7 +469,7 @@ class CheckoutController extends Controller
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
-                        'payment_type_id' => $request->shippingType,
+                        'shipping_type_id' => $request->shippingType,
                         'token' => $snap_token,
                     );
                 }
@@ -388,6 +483,9 @@ class CheckoutController extends Controller
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                     );
+
+                    Product::where('id', $id)
+                            ->decrement('stock', $details['quantity']);
                 }
                 Transaction::insert($dataTransaction);
             }
@@ -399,7 +497,7 @@ class CheckoutController extends Controller
 
     public function finish(Request $request)
     {
-        Session::forget('cart');
+        session()->forget('cart');
         $result = $request->input('result_data');
         $result = json_decode($result, true);
 
@@ -411,11 +509,6 @@ class CheckoutController extends Controller
 
         return redirect('/transaction-check?no=' . $result['order_id']);
 
-        // echo $result->status_message . '<br>';
-        // echo  $result['order_id'];
-        // echo 'RESULT <br><pre>';
-        // var_dump($result);
-        // echo '</pre>' ;
     }
 
     public function notification()

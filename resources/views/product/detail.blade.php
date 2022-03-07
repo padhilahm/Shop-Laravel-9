@@ -1,8 +1,12 @@
+{{-- @dd(session('cart')[1]) --}}
+
 @extends('layouts.app')
 
 @section('container')
 
 <div class="container px-4 px-lg-5 mt-5">
+
+
     @if(session('success'))
     <div class="alert alert-success">
         {{ session('success') }}
@@ -20,22 +24,29 @@
                 @endif
             </div>
             <div class="col-md-6">
-                <div class="small mb-1">{{ $product->name }}</div>
+                {{-- <div class="small mb-1">{{ $product->name }}</div> --}}
                 <h1 class="display-5 fw-bolder">{{ $product->name }}</h1>
-                <div class="fs-5 mb-5">
-                    <span>{{ $product->price }}</span>
+                <div class="fs-5 mb-4">
+                    Harga <br>
+                    <span>Rp.{{ number_format($product->price) }}</span>
                 </div>
+                Deskripsi
                 <p class="lead">{!! $product->description !!}</p>
+                @if ($product->stock == 0)
+                <div class="text-danger">Stok habis</div>
+                @else
+
                 <div class="d-flex">
                     <input class="form-control text-center me-3" id="quantity" type="number" value="1" min="1"
-                        style="max-width: 5rem" />
-                    {{-- <a href="{{ route('add.to.cart', $product->id) }}"> --}}
-                        <button class="btn btn-outline-dark flex-shrink-0" type="button" onclick="addCart({{ $product->id }})">
-                            <i class="bi-cart-fill me-1"></i>
-                            Add to cart
-                        </button>
-                    {{-- </a> --}}
+                        max="{{ $product->stock }}" style="max-width: 5rem" onchange="productStock()" />
+                    <button class="btn btn-outline-dark flex-shrink-0" type="button"
+                        onclick="addCart({{ $product->id }})">
+                        <i class="bi-cart-fill me-1"></i>
+                        Add to cart
+                    </button>
                 </div>
+                @endif
+
             </div>
         </div>
     </div>
@@ -43,26 +54,35 @@
 @endsection
 
 @section('scripts')
+
 <script type="text/javascript">
     function addCart(id) {
         var id = id;
         var quantity = $('#quantity').val();
-        $.ajax({
-            url: '{{ route('add.to.cart') }}',
-            method: "post",
-            type: 'JSON',
-            data: {
-                _token: '{{ csrf_token() }}', 
-                id: id,
-                quantity: quantity
-            },
-            success: function (response) {
-                console.log(response.quantity);
-                $('#totalCart').html(response.totalCart);
-                // $('#alert').html(response.alert);
-                alert(response.alert);
-            }
-        });
+        if (quantity != 0) {
+            $.ajax({
+                url: '{{ route('add.to.cart') }}',
+                method: "post",
+                type: 'JSON',
+                data: {
+                    _token: '{{ csrf_token() }}', 
+                    id: id,
+                    quantity: quantity
+                },
+                success: function (response) {
+                    if (response.code === 400) {
+                        alert(response.message);
+                    }else{
+                        console.log(response.quantity);
+                        $('#totalCart').html(response.totalCart);
+                        // $('#alert').html(response.alert);
+                        alert(response.message);
+                    }
+                }
+            });
+        }else{
+            alert('Masukkan jumlah dibeli');
+        }
     }
   
 </script>

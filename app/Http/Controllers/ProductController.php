@@ -18,7 +18,7 @@ class ProductController extends Controller
     public function index()
     {
         $data = array(
-            'products' => Product::orderBy('created_at', 'desc')
+            'products' => Product::orderByDesc('created_at')
                                 ->paginate(8), 
         );
         return view('home.index', $data);
@@ -50,10 +50,32 @@ class ProductController extends Controller
 
     public function addToCart(Request $request)
     {
+        session()->forget('overStock');
+
         $id = $request->id;
         $quantity = $request->quantity;
 
         $product = Product::findOrFail($id);
+
+        // cek stok dibeli melebih stok yg ada
+        if ($quantity > $product->stock) {
+            $data = array(
+                'code' => 400,
+                'message' => "Jumlah yang dibeli melebihi stok"
+            );
+            return response()->json($data, 200);
+        }
+
+        // cek stok yg dibeli melebih stok yg ada dan stok di cart
+        if (isset(session('cart')[$id])) {
+            if ($quantity > ($product->stock - session('cart')[$id]['quantity']) ) {
+                $data = array(
+                    'code' => 400,
+                    'message' => "Jumlah yang dibeli melebihi stok produk dan jumlah di Keranjang"
+                );
+                return response()->json($data, 200);
+            }
+        }
           
         $cart = session()->get('cart', []);
   
@@ -68,13 +90,12 @@ class ProductController extends Controller
             ];
         }
         session()->put('cart', $cart);
-        // return redirect()->back()->with('success', 'Product added to cart successfully!');
-        // return count((array) session('cart'));
+
         $data = array(
+            'code' => 200,
             'totalCart' => count((array) session('cart')), 
             'quantity' => $quantity,
-            'alert' => "Product added to cart successfully!"
-            // 'alert' => "<div class='alert alert-success'>Product added to cart successfully!</div>"
+            'message' => "Produk berhasil ditambahkan ke keranjang"
         );
         return response()->json($data, 200);
     }
@@ -125,6 +146,8 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        session()->forget('overStock');
+
         if($request->id && $request->quantity){
             $cart = session()->get('cart');
             $cart[$request->id]["quantity"] = $request->quantity;
@@ -176,6 +199,8 @@ class ProductController extends Controller
 
     public function remove(Request $request)
     {
+        session()->forget('overStock');
+
         if($request->id) {
             $cart = session()->get('cart');
             if(isset($cart[$request->id])) {

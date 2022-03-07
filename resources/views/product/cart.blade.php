@@ -1,18 +1,22 @@
-{{-- @dd(session('cart')) --}}
-{{-- {{ session('cart')[0]['name'] }} --}}
-{{-- {{ var_dump(session('cart')) }} --}}
+{{-- {{ session('productStock') }} --}}
+{{-- @dd(session('overStock')) --}}
 
 @extends('layouts.app')
 
 @section('container')
 <div class="container px-4 px-lg-5 mt-5">
+    @if (session('overStock'))
+    <div class="alert alert-danger" id="overStock" role="alert">
+        {{ session('overStock') }}
+      </div>
+    @endif
     <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
         <table id="cart" class="table table-hover table-condensed">
             <thead>
                 <tr>
-                    <th style="width:50%">Product</th>
-                    <th style="width:10%">Price</th>
-                    <th style="width:8%">Quantity</th>
+                    <th style="width:50%">Produk</th>
+                    <th style="width:10%">Harga</th>
+                    <th style="width:8%">Jumlah</th>
                     <th style="width:22%" class="text-center">Subtotal</th>
                     <th style="width:10%"></th>
                 </tr>
@@ -63,8 +67,7 @@
                 </tr>
                 <tr>
                     <td colspan="5" class="text-right">
-                        <a href="{{ url('/') }}" class="btn btn-outline-dark"><i class="fa fa-angle-left"></i> Continue
-                            Shopping</a>
+                        <a href="{{ url('/') }}" class="btn btn-outline-dark"><i class="fa fa-angle-left"></i> Lanjutkan Belanja</a>
                         <a href="/checkout-buyer"><button class="btn btn-outline-dark">Checkout</button></a>
                     </td>
                 </tr>
@@ -119,6 +122,7 @@
             success: function (response) {
                 dataView(response.dataView);
                 $('#total').html(`Total Rp.${response.total}`);
+                $('#overStock').css('display','none');
             }
         });
     }
@@ -139,6 +143,8 @@
                     dataView(response.dataView);
                     $('#total').html(`Total Rp.${response.total}`);
                     $('#totalCart').html(response.totalCart);
+                    $('#overStock').css('display','none');
+
                 }
             });
         }   

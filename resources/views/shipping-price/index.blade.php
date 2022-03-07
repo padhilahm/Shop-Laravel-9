@@ -43,9 +43,17 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php
+                        $i = 0
+                    @endphp
                     @foreach ($shippingPrices as $shippingPrice)
                     <tr>
-                        <td>{{ $shippingPrice->distince }} KM</td>
+                        @if ($i == ($shippingPrices->count() - 1))
+                        <td>{{ $shippingPrice->distince }} KM - {{ $shippingMax }} KM</td>
+                        @else
+                        <td>{{ $shippingPrice->distince }} KM - {{ $shippingPrices[$i+1]->distince }} KM</td>
+                        @endif
+
                         <td>Rp.{{ number_format($shippingPrice->price) }}</td>
                         <td><a href="/shipping-price/{{ $shippingPrice->id }}/edit"><button class="text-warning">Edit</button></a> <form action="/shipping-price/{{ $shippingPrice->id }}"
                                 method="POST">
@@ -55,6 +63,9 @@
                             </form>
                         </td>
                     </tr>
+                    @php
+                        $i++
+                    @endphp
                     @endforeach
                 </tbody>
             </table>

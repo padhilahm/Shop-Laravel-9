@@ -20,93 +20,94 @@
     }
 </style>
 <div class="container px-4 px-lg-5 mt-5">
-    {{-- <form action="/checkout-buyer" method="POST"> --}}
 
-        @csrf
-        {{-- <small id="errorAll" class="form-text text-danger"></small> --}}
-        <div class="alert alert-danger print-error-msg" style="display:none">
-            <ul></ul>
+    <div class="alert alert-danger print-error-msg" style="display:none">
+        <ul></ul>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="inputEmail4">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+
+            <small id="emailError" class="form-text text-danger"></small>
+
         </div>
-        {{-- {{ $distance }} --}}
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="inputEmail4">Email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+        <div class="form-group col-md-6">
+            <label for="inputPassword4">No HP</label>
+            <input type="number" class="form-control" id="phone" name="phone" placeholder="No HP">
 
-                <small id="emailError" class="form-text text-danger"></small>
+            <small id="phoneError" class="form-text text-danger"></small>
 
-            </div>
-            <div class="form-group col-md-6">
-                <label for="inputPassword4">No HP</label>
-                <input type="number" class="form-control" id="phone" name="phone" placeholder="No HP">
-
-                <small id="phoneError" class="form-text text-danger"></small>
-
-            </div>
         </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="inputEmail4">Nama</label>
-                <input type="text" class="form-control" id="name" name="name" placeholder="Nama">
-                <small id="nameError" class="form-text text-danger"></small>
-
-            </div>
-            <div class="form-group col-md-6">
-                <label for="inputPassword4">Jenis Pengiriman</label>
-                <select name="shippingType" id="shippingType" class="form-control" onchange="shippingType()">
-                    <option value=""> - Pilih - </option>
-                    <option value="1">Kurir</option>
-                    <option value="2">Ambil Sendiri</option>
-                </select>
-
-                <small id="shippingTypeError" class="form-text text-danger"></small>
-
-            </div>
-        </div>
-
-        {{-- <div class="form-group">
-            <label for="inputAddress">Name</label>
-            <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="inputEmail4">Nama</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Nama">
             <small id="nameError" class="form-text text-danger"></small>
 
-        </div> --}}
+        </div>
+        <div class="form-group col-md-6">
+            <label for="inputPassword4">Jenis Pengiriman</label>
+            <select name="shippingType" id="shippingType" class="form-control" onchange="shippingType()">
+                <option value=""> - Pilih - </option>
+                <option value="1">Diantar kerumah</option>
+                <option value="2">Ambil Sendiri</option>
+            </select>
 
-        <div id="courierType" style="display:none">
-            <div class="form-group">
-                <label for="inputAddress">Alamat</label>
-                <textarea name="address" id="address" class="form-control"></textarea>
-                <small id="addressError" class="form-text text-danger"></small>
-            </div>
+            <small id="shippingTypeError" class="form-text text-danger"></small>
+        </div>
+    </div>
 
-            <div class="form-group">
-                <label for="inputAddress">Pilih Lokasi Pengantaran</label>
-                <div id="map"></div>
-                <small id="addressError" class="form-text text-danger"></small>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label for="inputEmail4">Latitude</label>
-                    <input type="text" class="form-control" id="latitude" name="latitude">
-
-                    <small id="latitudeError" class="form-text text-danger"></small>
-
-                </div>
-                <div class="form-group col-md-6">
-                    <label for="inputPassword4">Longitude</label>
-                    <input type="text" class="form-control" id="longitude" name="longitude">
-                    <small id="longitudeError" class="form-text text-danger"></small>
-
-                </div>
-            </div>
+    <div id="courierType" style="display:none">
+        <div class="form-group">
+            <label for="inputAddress">Alamat Lengkap</label>
+            <textarea name="address" id="address" class="form-control"></textarea>
+            <small id="addressError" class="form-text text-danger"></small>
         </div>
 
-
-        <div class="text-right">
-            <button type="submit" id="pay-button" class="btn btn-outline-dark mb-5">Bayar</button>
+        <div class="form-group">
+            <label for="inputAddress">Pilih Lokasi Pengantaran</label>
+            <div id="map"></div>
+            <small id="addressError" class="form-text text-danger"></small>
         </div>
-        {{--
-    </form> --}}
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="inputEmail4">Latitude</label>
+                <input type="text" class="form-control" id="latitude" name="latitude">
+
+                <small id="latitudeError" class="form-text text-danger"></small>
+
+            </div>
+            <div class="form-group col-md-6">
+                <label for="inputPassword4">Longitude</label>
+                <input type="text" class="form-control" id="longitude" name="longitude">
+                <small id="longitudeError" class="form-text text-danger"></small>
+
+            </div>
+        </div>
+    </div>
+
+    @php
+        $total = 0
+    @endphp
+
+    @if (session('cart'))
+        @foreach (session('cart') as $id => $details)
+            @php
+                $total +=  $details['price'] * $details['quantity']
+            @endphp
+        @endforeach
+    @endif
+
+    <div class="text-right">
+        <div id="total">
+            Jumlah yang dibayar Rp. {{ $total }} 
+        </div>
+        <br><br>
+        <button type="submit" id="pay-button" class="btn btn-outline-dark mb-5">Bayar</button>
+    </div>
 </div>
 <form id="payment-form" method="post" action="/snap-finish">
     @csrf
@@ -124,38 +125,12 @@
             maps();
         }else{
             $('#courierType').css('display','none');
+            $('#total').html(`Jumlah yang dibayar Rp. {{ $total }}`);
         }
     }
 </script>
 
 <script>
-    function distance(lat1, lon1, lat2, lon2) {
-        var R = 6371; // Radius of the earth in km
-        var dLat = deg2rad(lat2-lat1);  // deg2rad below
-        var dLon = deg2rad(lon2-lon1); 
-        var a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2)
-            ; 
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-        var d = R * c; // Distance in km
-        return d;
-        // return lat1;
-    }
-
-    function deg2rad(deg) {
-        return deg * (Math.PI/180)
-    }
-</script>
-
-
-
-<script>
-    // $(document).ready(function() {
-    //     getSetting();
-    // });
-
     function maps() {
         var map = L.map('map').setView([-0.21973, 118.91602], 5);
     
@@ -189,40 +164,34 @@
         iconSize: [20, 30], // size of the icon
     });
     
-    // function getSetting() {
-    //     L.marker([-0.21973 , 118.91602], {icon: markIcon}).addTo(map).bindPopup(`My shop location`).openPopup();
-    // }
-    
     var theMarker = {};
     // get coordinate
     map.on('click',function(e){
         var coord = e.latlng.toString().split(',');
         var lat = coord[0].split('(');
         var lng = coord[1].split(')');
-        var distance_ = distance(lat[1], lng[0], {{ $latitude }}, {{ $longitude }});
-        
-        if (distance_ <= {{ $shippingMax }}) {
 
-            if (distance_ >= {{ $shippingPrices[0]->distince }} && distance_ <= {{ $shippingPrices[1]->distince }}) {
-                var shipping = {{ $shippingPrices[0]->price }};
+        var latitudeFrom = lat[1];
+        var longitudeFrom = lng[0];
+        var latitudeTo = {{ $latitude }};
+        var longitudeTo = {{ $longitude }};
+        $.ajax({
+            url: '/checkout-distince/',
+            method: 'POST',
+            data:{
+                _token: '{{ csrf_token() }}',
+                latitudeFrom: latitudeFrom,
+                longitudeFrom: longitudeFrom,
+                latitudeTo: latitudeTo,
+                longitudeTo: longitudeTo
+            },
+            cache: false,
+            success: function(data){
+                alert(data.message);
+                var priceShipping = {{ $total }} + data.priceShipping;
+                $('#total').html(`Jumlah yang dibayar Rp. ${priceShipping}`);
             }
-
-            @for ($i = 1 ; $i < $shippingPrices->count(); $i++)
-            @if ($i == $shippingPrices->count()-1)
-                if (distance_ > {{ $shippingPrices[$i]->distince }} ) {
-                    var shipping = {{ $shippingPrices[$i]->price }};
-                }
-            @else
-                if (distance_ > {{ $shippingPrices[$i]->distince }} && distance_ <= {{ $shippingPrices[$i+1]->distince }}) {
-                    var shipping = {{ $shippingPrices[$i]->price }};
-                }
-            @endif
-            @endfor
-            
-            alert(`Biaya kurir untuk lokasi Anda Rp.${shipping}`);
-        }else{
-            alert('Mohon maaf lokasi Anda masih belum terjangkau untuk pengantaran secara langsung');
-        }
+        });
 
         if (theMarker != undefined) {
                 map.removeLayer(theMarker);
@@ -243,7 +212,6 @@
             $(".print-error-msg").find("ul").append(`<li>${value}</li>`);
         });
     }
-    
 
 $('#pay-button').click(function (event) {
     event.preventDefault();
@@ -273,7 +241,6 @@ $('#pay-button').click(function (event) {
             shippingType: shippingType
         },
         success: function(data) {
-            // console.log(data);
             if (data.code === 400) {
                 $('#pay-button').removeAttr("disabled");
                 $('#pay-button').html(`Bayar`);
@@ -285,7 +252,8 @@ $('#pay-button').click(function (event) {
                 }else{
                     console.log(data.error);
                     // $('#errorAll').html(data.error);
-                    printErrorMsg(data.error);
+                    // printErrorMsg(data.error);
+                    alert('Mohon isi semua form yang ada');
                 }
             }else{
                 var resultType = document.getElementById('result-type');
