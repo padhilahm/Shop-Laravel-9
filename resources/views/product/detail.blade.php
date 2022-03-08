@@ -30,6 +30,10 @@
                     Harga <br>
                     <span>Rp.{{ number_format($product->price) }}</span>
                 </div>
+                <div class="fs-5 mb-4">
+                    Stok <br>
+                    <span>{{ $product->stock }}</span>
+                </div>
                 Deskripsi
                 <p class="lead">{!! $product->description !!}</p>
                 @if ($product->stock == 0)

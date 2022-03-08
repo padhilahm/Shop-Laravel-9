@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>TokoMe</title>
+    <title>{{ $shopName }}</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <!-- Bootstrap icons-->
@@ -49,7 +49,7 @@
     <!-- Footer-->
     <footer class="py-5 bg-dark" id="footer">
         <div class="container">
-            <p class="m-0 text-center text-white">Copyright &copy; TokoMe {{ date('Y') }}</p>
+            <p class="m-0 text-center text-white">Copyright &copy; {{ $shopName }} {{ date('Y') }}</p>
         </div>
     </footer>
     <!-- Bootstrap core JS-->

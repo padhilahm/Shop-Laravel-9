@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use GuzzleHttp\Psr7\Response;
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use GuzzleHttp\Psr7\Response;
 // use App\Http\Requests\StoreProductRequest;
 // use App\Http\Requests\UpdateProductRequest;
 
@@ -20,6 +21,7 @@ class ProductController extends Controller
         $data = array(
             'products' => Product::orderByDesc('created_at')
                                 ->paginate(8), 
+            'shopName' => Setting::where('name', 'shop-name')->first()->value
         );
         return view('home.index', $data);
         // $products = Product::all();
@@ -38,14 +40,20 @@ class ProductController extends Controller
 
     public function cart()
     {
-        return view('product.cart');
+        $data = array(
+            'shopName' => Setting::where('name', 'shop-name')->first()->value 
+        );
+        return view('product.cart', $data);
         // return view('cart');
         // return 'cart';
     }
     
     public function checkout()
     {
-        return view('product.checkout');
+        $data = array(
+            'shopName' => Setting::where('name', 'shop-name')->first()->value 
+        );
+        return view('product.checkout', $data);
     }
 
     public function addToCart(Request $request)
@@ -122,6 +130,7 @@ class ProductController extends Controller
     {
         $data = array(
             'product' => $product, 
+            'shopName' => Setting::where('name', 'shop-name')->first()->value
         );
         return view('product.detail', $data);
     }

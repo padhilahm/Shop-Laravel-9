@@ -39,6 +39,7 @@ class CheckoutController extends Controller
     {
         $data = array(
             'clientKey' => Setting::where('name', 'client-key')->first()->value,
+            'shopName' => Setting::where('name', 'shop-name')->first()->value
         );
         return view('chekcout.check-transaction', $data);
     }
@@ -90,13 +91,17 @@ class CheckoutController extends Controller
     public function checkoutBuyer()
     {
         // $distance = $this->distance(-3.448323, 114.871273, -3.443305, 114.84782);
+        if (session('cart') == null) {
+            return redirect('cart')->with('error', 'Keranjang kosong, silahkan masukkan produk yang ingin Anda beli');
+        }
         session()->forget('overStock');
         $data = array(
             'clientKey' => Setting::where('name', 'client-key')->first()->value,
             'latitude' => Setting::where('name', 'latitude')->first()->value,
             'longitude' => Setting::where('name', 'longitude')->first()->value,
             'shippingMax' => Setting::where('name', 'shipping-max')->first()->value,
-            'shippingPrices' => ShippingPrice::orderBy('distince')->get()
+            'shippingPrices' => ShippingPrice::orderBy('distince')->get(),
+            'shopName' => Setting::where('name', 'shop-name')->first()->value
         );
         return view('chekcout.checkout-buyer', $data);
     }

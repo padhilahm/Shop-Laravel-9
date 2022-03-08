@@ -24,6 +24,10 @@ class DatabaseSeeder extends Seeder
         Category::factory(2)->create();
         
         Setting::create([
+            'name' => 'shop-name',
+            'value' => 'TokoMe'
+        ]);
+        Setting::create([
             'name' => 'client-key',
             'value' => 'SB-Mid-client-ZK801qB3t6GSnZl0'
         ]);

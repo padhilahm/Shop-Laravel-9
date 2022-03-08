@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,11 +10,11 @@ class LoginController extends Controller
 {
     public function index(Request $request)
     {
-        // $data = array(
-        //     'link' => str_replace(url(''), '', url()->previous())
-        // );
-        // session(['link' => url()->previous()]);
-        return view('login.index');
+        $data = array(
+            'shopName' => Setting::where('name', 'shop-name')->first()->value 
+        );
+
+        return view('login.index', $data);
     }
 
     public function authenticate(Request $request)

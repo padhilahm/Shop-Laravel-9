@@ -10,6 +10,11 @@
         {{ session('overStock') }}
       </div>
     @endif
+    @if (session()->has('error'))
+    <div class="alert alert-danger" id="overStock" role="alert">
+        {{ session('error') }}
+      </div>
+    @endif
     <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
         <table id="cart" class="table table-hover table-condensed">
             <thead>

@@ -61,9 +61,9 @@
                 }
 
                 if (data.dataPayment.status == 201) {
-                    var paymentStatus = 'Dalam proses';
+                    var paymentStatus = 'Tertunda';
                 } else if(data.dataPayment.status == 200){
-                    var paymentStatus = 'Selesai';
+                    var paymentStatus = 'Dibayar';
                 }else{
                     var paymentStatus = 'Dibatalkan';
                 }
