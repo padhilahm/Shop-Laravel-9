@@ -18,11 +18,22 @@ class ProductsController extends Controller
     public function index()
     {
         $no = 5;
-        $product = DB::table('products')
+        if (isset($_GET['search'])) {
+            $search = $_GET['search'];
+            $product = DB::table('products')
                     ->join('categories', 'products.category_id', '=', 'categories.id')
                     ->selectRaw('products.name, products.stock, products.price, products.id, categories.name as category')
+                    ->where('products.name', 'like', "%$search%")
+                    ->orWhere('categories.name', 'like', "%$search%")
                     ->orderBy('products.created_at', 'desc')
                     ->paginate($no);
+        }else{
+            $product = DB::table('products')
+                        ->join('categories', 'products.category_id', '=', 'categories.id')
+                        ->selectRaw('products.name, products.stock, products.price, products.id, categories.name as category')
+                        ->orderBy('products.created_at', 'desc')
+                        ->paginate($no);
+        }
 
         $data = array(
             'products' => $product, 

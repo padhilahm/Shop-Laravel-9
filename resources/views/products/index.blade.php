@@ -24,6 +24,15 @@
             Products
         </div>
         <div class="panel-body">
+            <form action="/products" method="get">
+                <div class="col-sm-4 text-right">
+                    <input type="text" name="search" class="form-control" placeholder="Search name or category...">
+                </div>
+                <div class="col-sm-1">
+                    <button class="btn-primary">Search</button>
+                </div>
+            </form>
+            <hr>
             <a href="/products/create"><button class="text-danger">Add Product</button></a>
             <table class="table">
                 <thead>

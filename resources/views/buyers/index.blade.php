@@ -25,6 +25,15 @@
         </div>
         <div class="panel-body">
             {{-- <a href="/users/create"><button class="text-danger">Add user</button></a> --}}
+            <form action="/buyers" method="get">
+                <div class="col-sm-4 text-right">
+                    <input type="text" name="search" class="form-control" placeholder="Search...">
+                </div>
+                <div class="col-sm-1">
+                    <button class="btn-primary">Search</button>
+                </div>
+            </form>
+            <hr>
             <table class="table">
                 <thead>
                     <tr>

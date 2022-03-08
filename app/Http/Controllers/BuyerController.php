@@ -14,8 +14,18 @@ class BuyerController extends Controller
      */
     public function index()
     {
-        $buyers = Buyer::orderByDesc('created_at')
-                    ->paginate();
+        if (isset($_GET['search'])) {
+            $search = $_GET['search'];
+            $buyers = Buyer::where('email', 'like', "%$search%")
+                            ->orWhere('name', 'like', "%$search%")
+                            ->orWhere('phone', 'like', "%$search%")
+                            ->orderByDesc('created_at')
+                            ->paginate();
+        }else{
+            $buyers = Buyer::orderByDesc('created_at')
+            ->paginate();
+        }
+        
         $data = array(
             'url' => 'buyers', 
             'buyers' => $buyers
