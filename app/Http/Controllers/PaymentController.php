@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Buyer;
 use App\Models\Payment;
+use App\Models\Setting;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StorePaymentRequest;
-use App\Http\Requests\UpdatePaymentRequest;
-use App\Models\Buyer;
 use Symfony\Component\Console\Input\Input;
+use App\Http\Requests\UpdatePaymentRequest;
 
 class PaymentController extends Controller
 {
@@ -33,7 +34,8 @@ class PaymentController extends Controller
         $data = array(
             'url' => 'payments',
             'payments' => $payments, 
-            'no' => $no
+            'no' => $no,
+            'clientKey' => Setting::where('name', 'client-key')->first()->value,
         );
         return view('payments.index', $data);
     }
@@ -77,7 +79,8 @@ class PaymentController extends Controller
             'url' => 'payments',
             'payment' => $payment,
             'buyer' => $buyer,
-            'products' => $products
+            'products' => $products,
+            'clientKey' => Setting::where('name', 'client-key')->first()->value
         );
         return view('payments.show', $data);
     }
