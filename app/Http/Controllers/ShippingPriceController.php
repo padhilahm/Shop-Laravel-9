@@ -16,7 +16,7 @@ class ShippingPriceController extends Controller
     public function index()
     {
         $data = array(
-            'url' => 'shipping-price', 
+            'url' => 'setting', 
             'shippingPrices' => ShippingPrice::orderBy('distince')->get(),
             'shippingMax' => Setting::where('name', 'shipping-max')->first()->value,
         );

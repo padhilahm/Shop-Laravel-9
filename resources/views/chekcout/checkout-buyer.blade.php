@@ -41,21 +41,42 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-12">
             <label for="inputEmail4">Nama</label>
             <input type="text" class="form-control" id="name" name="name" placeholder="Nama">
             <small id="nameError" class="form-text text-danger"></small>
 
         </div>
+    </div>
+    <div class="form-row">
         <div class="form-group col-md-6">
             <label for="inputPassword4">Jenis Pengiriman</label>
             <select name="shippingType" id="shippingType" class="form-control" onchange="shippingType()">
                 <option value=""> - Pilih - </option>
+                @if ($delivered == 'true')
                 <option value="1">Diantar kerumah</option>
+                @endif
+                @if ($take == 'true')
                 <option value="2">Ambil Sendiri</option>
+                @endif
             </select>
 
             <small id="shippingTypeError" class="form-text text-danger"></small>
+        </div>
+
+        <div class="form-group col-md-6">
+            <label for="inputPassword4">Jenis Pembayaran</label>
+            <select name="paymentType" id="paymentType" class="form-control" onchange="paymentType()">
+                <option value=""> - Pilih - </option>
+                @if ($direct == 'true')
+                <option value="1">Bayar Langsung</option>
+                @endif
+                @if ($cod == 'true')
+                <option value="2">Bayar Ditempat</option>
+                @endif
+            </select>
+
+            <small id="paymentTypeError" class="form-text text-danger"></small>
         </div>
     </div>
 

@@ -39,7 +39,7 @@ class CheckoutController extends Controller
     {
         $data = array(
             'clientKey' => Setting::where('name', 'client-key')->first()->value,
-            'shopName' => Setting::where('name', 'shop-name')->first()->value
+            'shopName' => Setting::where('name', 'shop-name')->first()->value,
         );
         return view('chekcout.check-transaction', $data);
     }
@@ -101,7 +101,11 @@ class CheckoutController extends Controller
             'longitude' => Setting::where('name', 'longitude')->first()->value,
             'shippingMax' => Setting::where('name', 'shipping-max')->first()->value,
             'shippingPrices' => ShippingPrice::orderBy('distince')->get(),
-            'shopName' => Setting::where('name', 'shop-name')->first()->value
+            'shopName' => Setting::where('name', 'shop-name')->first()->value,
+            'delivered' => Setting::where('name', 'delivered')->first()->value,
+            'take' => Setting::where('name', 'take')->first()->value,
+            'direct' => Setting::where('name', 'direct')->first()->value,
+            'cod' => Setting::where('name', 'cod')->first()->value,
         );
         return view('chekcout.checkout-buyer', $data);
     }

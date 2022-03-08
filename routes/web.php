@@ -82,7 +82,24 @@ Route::post('update-shipping-max', [ShippingPriceController::class, 'updateShipp
 
 // setting
 Route::resource('setting', SettingController::class)->middleware('auth');
-Route::put('setting-update', [SettingController::class, 'updateSetting'])->middleware('auth');
+
+Route::put('setting-location', [SettingController::class, 'updateLocation'])->middleware('auth');
+Route::get('setting-location', [SettingController::class, 'location'])->middleware('auth');
+
+Route::put('setting-payment', [SettingController::class, 'updatePayment'])->middleware('auth');
+Route::get('setting-payment', [SettingController::class, 'payment'])->middleware('auth');
+
+Route::put('setting-shop', [SettingController::class, 'updateShop'])->middleware('auth');
+Route::get('setting-shop', [SettingController::class, 'shop'])->middleware('auth');
+
+Route::put('setting-email', [SettingController::class, 'updateEmail'])->middleware('auth');
+Route::get('setting-email', [SettingController::class, 'email'])->middleware('auth');
+
+Route::put('setting-delivery', [SettingController::class, 'updateDelivery'])->middleware('auth');
+Route::get('setting-delivery', [SettingController::class, 'delivery'])->middleware('auth');
+
+Route::put('setting-payment-type', [SettingController::class, 'updatePaymentType'])->middleware('auth');
+Route::get('setting-payment-type', [SettingController::class, 'paymentType'])->middleware('auth');
 
 // grouping
 Route::controller(ProductController::class)->group(function () {

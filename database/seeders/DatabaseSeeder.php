@@ -71,6 +71,22 @@ class DatabaseSeeder extends Seeder
             'name' => 'password',
             'value' => 'HIL~U)gSa_dz'
         ]);
+        Setting::create([
+            'name' => 'delivered',
+            'value' => 'true'
+        ]);
+        Setting::create([
+            'name' => 'take',
+            'value' => 'true'
+        ]);
+        Setting::create([
+            'name' => 'cod',
+            'value' => 'true'
+        ]);
+        Setting::create([
+            'name' => 'direct',
+            'value' => 'true'
+        ]);
 
         ShippingPrice::create([
             'distince' => 0,

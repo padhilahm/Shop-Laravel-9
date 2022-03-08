@@ -14,7 +14,7 @@
     @endif
     <div id="alert"></div>
     <div class="container px-4 px-lg-5 my-5">
-        <div class="row gx-4 gx-lg-5 align-items-center">
+        <div class="row gx-4 gx-lg-5 ">
             <div class="col-md-6">
                 @if ($product->image)
                 <img class="card-img-top mb-5 mb-md-0" src="/storage/{{ $product->image }}" alt="..." />
@@ -34,8 +34,7 @@
                     Stok <br>
                     <span>{{ $product->stock }}</span>
                 </div>
-                Deskripsi
-                <p class="lead">{!! $product->description !!}</p>
+                
                 @if ($product->stock == 0)
                 <div class="text-danger">Stok habis</div>
                 @else
@@ -50,6 +49,9 @@
                     </button>
                 </div>
                 @endif
+                <br>
+                <h5>Deskripsi</h5>
+                <p class="lead">{!! $product->description !!}</p>
 
             </div>
         </div>
