@@ -66,13 +66,13 @@
 
         <div class="form-group col-md-6">
             <label for="inputPassword4">Jenis Pembayaran</label>
-            <select name="paymentType" id="paymentType" class="form-control" onchange="paymentType()">
+            <select name="paymentType" id="paymentType" class="form-control">
                 <option value=""> - Pilih - </option>
                 @if ($direct == 'true')
                 <option value="1">Bayar Langsung</option>
                 @endif
                 @if ($cod == 'true')
-                <option value="2">Bayar Ditempat</option>
+                <option value="2">Bayar Ditempat(COD)</option>
                 @endif
             </select>
 
@@ -236,6 +236,7 @@
 
 $('#pay-button').click(function (event) {
     event.preventDefault();
+    
     $(this).attr("disabled", "disabled");
     $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`);
 
@@ -246,6 +247,7 @@ $('#pay-button').click(function (event) {
     var latitude = $('#latitude').val();
     var longitude = $('#longitude').val();
     var shippingType = $('#shippingType').val();
+    var paymentType = $('#paymentType').val();
     
     $.ajax({
         url: '/snap-token',
@@ -259,9 +261,11 @@ $('#pay-button').click(function (event) {
             latitude: latitude,
             longitude: longitude,
             address: address,
-            shippingType: shippingType
+            shippingType: shippingType,
+            paymentType: paymentType
         },
         success: function(data) {
+            console.log(data);
             if (data.code === 400) {
                 $('#pay-button').removeAttr("disabled");
                 $('#pay-button').html(`Bayar`);
@@ -277,34 +281,38 @@ $('#pay-button').click(function (event) {
                     alert('Mohon isi semua form yang ada');
                 }
             }else{
-                var resultType = document.getElementById('result-type');
-                var resultData = document.getElementById('result-data');
-
-                function changeResult(type,data){
-                    $("#result-type").val(type);
-                    $("#result-data").val(JSON.stringify(data));
-                    //resultType.innerHTML = type;
-                    //resultData.innerHTML = JSON.stringify(data); 
+                if (data.data == 'cod') {
+                    window.location.href = '/'+data.url;
+                }else{
+                    var resultType = document.getElementById('result-type');
+                    var resultData = document.getElementById('result-data');
+    
+                    function changeResult(type, data){
+                        $("#result-type").val(type);
+                        $("#result-data").val(JSON.stringify(data));
+                        //resultType.innerHTML = type;
+                        //resultData.innerHTML = JSON.stringify(data); 
+                    }
+    
+                    snap.pay(data.data, {
+                        onSuccess: function(result){
+                            changeResult('success', result);    
+                            console.log(result.status_message);
+                            console.log(result);
+                            $("#payment-form").submit();
+                        },
+                        onPending: function(result){
+                            changeResult('pending', result);
+                            console.log(result.status_message);
+                            $("#payment-form").submit();   
+                        },
+                        onError: function(result){
+                            changeResult('error', result);
+                            console.log(result.status_message);
+                            $("#payment-form").submit();
+                            }
+                    });
                 }
-
-                snap.pay(data, {
-                    onSuccess: function(result){
-                        changeResult('success', result);    
-                        console.log(result.status_message);
-                        console.log(result);
-                        $("#payment-form").submit();
-                    },
-                    onPending: function(result){
-                        changeResult('pending', result);
-                        console.log(result.status_message);
-                        $("#payment-form").submit();   
-                    },
-                    onError: function(result){
-                        changeResult('error', result);
-                        console.log(result.status_message);
-                        $("#payment-form").submit();
-                        }
-                });
                 $(".print-error-msg").css('display','none');
             }
             $('#pay-button').removeAttr("disabled");

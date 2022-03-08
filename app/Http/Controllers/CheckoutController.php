@@ -37,6 +37,9 @@ class CheckoutController extends Controller
 
     public function checkTransaction()
     {
+        if (isset($_GET['no'])) {
+            session()->forget('cart');
+        }
         $data = array(
             'clientKey' => Setting::where('name', 'client-key')->first()->value,
             'shopName' => Setting::where('name', 'shop-name')->first()->value,
@@ -268,18 +271,28 @@ class CheckoutController extends Controller
                 'address' => 'required',
                 'latitude' => 'required',
                 'longitude' => 'required',
-                'shippingType' => 'required'
+                'shippingType' => 'required',
+                'paymentType' => 'required',
             ]);
         }else{
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'phone' => 'required|numeric',
                 'name' => 'required',
-                'shippingType' => 'required'
+                'shippingType' => 'required',
+                'paymentType' => 'required',
             ]);
         }
 
         if ($request->shippingType != 1 and $request->shippingType != 2) {
+            $data = array(
+                'code' => 400,
+                'error' => ''
+            );
+            return response()->json($data, 200);
+        }
+        
+        if ($request->paymentType != 1 and $request->paymentType != 2) {
             $data = array(
                 'code' => 400,
                 'error' => ''
@@ -354,70 +367,169 @@ class CheckoutController extends Controller
 
         }
 
-        // error_log('masuk ke snap token dari ajax');
         $paymentId = rand();
-        $midtrans = new Midtrans;
-
-        $total = 0;
-        foreach (session('cart') as $id => $details) {
-            $total += $details['price'] * $details['quantity'];
-            $items[] = array(
-                'id'        => $id,
-                'price'     => $details['price'],
-                'quantity'  => $details['quantity'],
-                'name'      => $details['name']
+        if ($request->paymentType == 1) {
+            // error_log('masuk ke snap token dari ajax');
+            $midtrans = new Midtrans;
+    
+            $total = 0;
+            foreach (session('cart') as $id => $details) {
+                $total += $details['price'] * $details['quantity'];
+                $items[] = array(
+                    'id'        => $id,
+                    'price'     => $details['price'],
+                    'quantity'  => $details['quantity'],
+                    'name'      => $details['name']
+                );
+            }
+    
+            if ($request->shippingType == 1) {
+                $total += $shipping;
+                $items[] = array(
+                    'id'        => 'shipping',
+                    'price'     => $shipping,
+                    'quantity'  => 1,
+                    'name'      => 'Ongkir'
+                );
+            }
+    
+            $transaction_details = array(
+                'order_id'      => $paymentId,
+                'gross_amount'  => $total
             );
-        }
-
-        if ($request->shippingType == 1) {
-            $total += $shipping;
-            $items[] = array(
-                'id'        => 'shipping',
-                'price'     => $shipping,
-                'quantity'  => 1,
-                'name'      => 'Ongkir'
+    
+            // Populate customer's Info
+            $customer_details = array(
+                'first_name'      => $validate['name'],
+                'email'           => $validate['email'],
+                'phone'           => $validate['phone']
             );
-        }
-
-        $transaction_details = array(
-            'order_id'      => $paymentId,
-            'gross_amount'  => $total
-        );
-
-        // Populate customer's Info
-        $customer_details = array(
-            'first_name'      => $validate['name'],
-            'email'           => $validate['email'],
-            'phone'           => $validate['phone']
-        );
-
-        // Data yang akan dikirim untuk request redirect_url.
-        $credit_card['secure'] = true;
-        //ser save_card true to enable oneclick or 2click
-        //$credit_card['save_card'] = true;
-
-        $time = time();
-        $custom_expiry = array(
-            'start_time' => date("Y-m-d H:i:s O", $time),
-            'unit'       => 'hour',
-            'duration'   => 2
-        );
-
-        $transaction_data = array(
-            'transaction_details' => $transaction_details,
-            'item_details'       => $items,
-            'customer_details'   => $customer_details,
-            'credit_card'        => $credit_card,
-            'expiry'             => $custom_expiry
-        );
-
-        try {
-            $snap_token = $midtrans->getSnapToken($transaction_data);
-
+    
+            // Data yang akan dikirim untuk request redirect_url.
+            $credit_card['secure'] = true;
+            //ser save_card true to enable oneclick or 2click
+            //$credit_card['save_card'] = true;
+    
+            $time = time();
+            $custom_expiry = array(
+                'start_time' => date("Y-m-d H:i:s O", $time),
+                'unit'       => 'hour',
+                'duration'   => 2
+            );
+    
+            $transaction_data = array(
+                'transaction_details' => $transaction_details,
+                'item_details'       => $items,
+                'customer_details'   => $customer_details,
+                'credit_card'        => $credit_card,
+                'expiry'             => $custom_expiry
+            );
+    
+            try {
+                $snap_token = $midtrans->getSnapToken($transaction_data);
+    
+                $buyer = Buyer::where('email', $request->email)
+                    ->where('phone', $request->phone)
+                    ->first();
+    
+                if ($buyer) {
+                    Buyer::where('id', $buyer->id)
+                        ->update($validate);
+                    
+                    if ($request->shippingType == 1) {
+                        $dataPayment = array(
+                            'id' => $paymentId,
+                            'buyer_id' => $buyer->id,
+                            'shipping_type_id' => $request->shippingType,
+                            'token' => $snap_token,
+                            'latitude' => $request->latitude,
+                            'longitude' => $request->longitude,
+                            'shipping' => $shipping,
+                            'address' => $request->address,
+                            'payment_type_id' => $request->paymentType,
+                        );
+                    }else{
+                        $dataPayment = array(
+                            'id' => $paymentId,
+                            'buyer_id' => $buyer->id,
+                            'shipping_type_id' => $request->shippingType,
+                            'token' => $snap_token,
+                            'payment_type_id' => $request->paymentType,
+                        );
+                    }
+    
+                    Payment::create($dataPayment);
+    
+                    foreach (session('cart') as $id => $details) {
+                        $dataTransaction[] = array(
+                            'product_id' => $id,
+                            'payment_id' => $paymentId,
+                            'price' => $details['price'],
+                            'quantity' => $details['quantity'],
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s')
+                        );
+    
+                        Product::where('id', $id)
+                                ->decrement('stock', $details['quantity']);
+                    }
+                    Transaction::insert($dataTransaction);
+                } else {
+                    Buyer::create($validate);
+                    $buyer = Buyer::where('email', $validate['email'])
+                        ->where('phone', $validate['phone'])
+                        ->first();
+                    if ($request->shippingType == 1) {
+                        $dataPayment = array(
+                            'id' => $paymentId,
+                            'buyer_id' => $buyer->id,
+                            'shipping_type_id' => $request->shippingType,
+                            'token' => $snap_token,
+                            'latitude' => $request->latitude,
+                            'longitude' => $request->longitude,
+                            'shipping' => $shipping,
+                            'address' => $request->address,
+                            'payment_type_id' => $request->paymentType,
+                        );
+                    }else{
+                        $dataPayment = array(
+                            'id' => $paymentId,
+                            'buyer_id' => $buyer->id,
+                            'shipping_type_id' => $request->shippingType,
+                            'token' => $snap_token,
+                            'payment_type_id' => $request->paymentType,
+                        );
+                    }
+                    Payment::create($dataPayment);
+                    foreach (session('cart') as $id => $details) {
+                        $dataTransaction[] = array(
+                            'product_id' => $id,
+                            'payment_id' => $paymentId,
+                            'price' => $details['price'],
+                            'quantity' => $details['quantity'],
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s')
+                        );
+    
+                        Product::where('id', $id)
+                                ->decrement('stock', $details['quantity']);
+                    }
+                    Transaction::insert($dataTransaction);
+                }
+                $data = array(
+                    'code' => 200,
+                    'data' => $snap_token,
+                    'error' => ''
+                );
+                return response()->json($data, 200);
+                // return $snap_token;
+            } catch (Exception $e) {
+                return $e->getMessage;
+            }
+        }else{
             $buyer = Buyer::where('email', $request->email)
-                ->where('phone', $request->phone)
-                ->first();
-
+                    ->where('phone', $request->phone)
+                    ->first();
             if ($buyer) {
                 Buyer::where('id', $buyer->id)
                     ->update($validate);
@@ -427,18 +539,20 @@ class CheckoutController extends Controller
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
                         'shipping_type_id' => $request->shippingType,
-                        'token' => $snap_token,
+                        'payment_type_id' => $request->paymentType,
                         'latitude' => $request->latitude,
                         'longitude' => $request->longitude,
                         'shipping' => $shipping,
-                        'address' => $request->address
+                        'address' => $request->address,
+                        'status' => 200
                     );
                 }else{
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
                         'shipping_type_id' => $request->shippingType,
-                        'token' => $snap_token,
+                        'payment_type_id' => $request->paymentType,
+                        'status' => 200
                     );
                 }
 
@@ -468,18 +582,20 @@ class CheckoutController extends Controller
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
                         'shipping_type_id' => $request->shippingType,
-                        'token' => $snap_token,
+                        'payment_type_id' => $request->paymentType,
                         'latitude' => $request->latitude,
                         'longitude' => $request->longitude,
                         'shipping' => $shipping,
-                        'address' => $request->address
+                        'address' => $request->address,
+                        'status' => 200
                     );
                 }else{
                     $dataPayment = array(
                         'id' => $paymentId,
                         'buyer_id' => $buyer->id,
                         'shipping_type_id' => $request->shippingType,
-                        'token' => $snap_token,
+                        'payment_type_id' => $request->paymentType,
+                        'status' => 200
                     );
                 }
                 Payment::create($dataPayment);
@@ -498,15 +614,20 @@ class CheckoutController extends Controller
                 }
                 Transaction::insert($dataTransaction);
             }
-            return $snap_token;
-        } catch (Exception $e) {
-            return $e->getMessage;
+            $data = array(
+                'code' => 200,
+                'data' => 'cod',
+                'url' => 'transaction-check?no='.$paymentId,
+                'error' => ''
+            );
+            return response()->json($data, 200);
+            // return 'cod';
         }
     }
 
     public function finish(Request $request)
     {
-        session()->forget('cart');
+        
         $result = $request->input('result_data');
         $result = json_decode($result, true);
 

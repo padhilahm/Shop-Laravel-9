@@ -93,6 +93,27 @@
                     var shop = '';
                 }
 
+                if (data.dataPayment.token == null) {
+                    var paymentToken = '';
+                    var paymentStatus_ = '';
+                }else{
+                    var paymentToken = `<div class="form-group row">
+                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            <input type="hidden" id="token" value="${data.dataPayment.token}">
+                            <div class="text-right">
+                                <button onclick="snapPay()" type="submit" id="check" class="btn btn-outline-dark mb-5">Cek Pembayaran</button>
+                            </div>
+                        </div>
+
+                    </div>`;
+                    var paymentStatus_ = `<div class="form-group row">
+                        <label for="inputEmail3" class="col-sm-2 col-form-label">Status</label>
+                        <div class="col-sm-10">
+                            : ${paymentStatus}
+                        </div>
+                    </div>`;
+                }
+
                 products.forEach(product => {
                     product_ += `<tr>
                             <td>${product.name}</td>
@@ -117,12 +138,7 @@
                         </div>
                     </div>
                     ${shop}
-                    <div class="form-group row">
-                        <label for="inputEmail3" class="col-sm-2 col-form-label">Status</label>
-                        <div class="col-sm-10">
-                            : ${paymentStatus}
-                        </div>
-                    </div>
+                    ${paymentStatus_}
                     <div class="form-group row">
                         <label for="inputEmail3" class="col-sm-2 col-form-label">Nama</label>
                         <div class="col-sm-10">
@@ -165,15 +181,7 @@
                         </div>
                     </div>
                     
-                    <div class="form-group row">
-                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                            <input type="hidden" id="token" value="${data.dataPayment.token}">
-                            <div class="text-right">
-                                <button onclick="snapPay()" type="submit" id="check" class="btn btn-outline-dark mb-5">Cek Pembayaran</button>
-                            </div>
-                        </div>
-
-                    </div>
+                    ${paymentToken}
                 </div>
             </div>`);
             }
