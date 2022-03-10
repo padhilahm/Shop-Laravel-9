@@ -9,7 +9,15 @@
         @include('layouts-admin.menu')
     </div>
 </div>
-
+@if (session()->has('success'))
+<div class="alert alert-success col-lg-10" role="alert">
+    {{ session('success') }}
+</div>
+@elseif (session()->has('error'))
+<div class="alert alert-danger col-lg-10" role="alert">
+    {{ session('error') }}
+</div>
+@endif
 <div class="col-md-10 content">
     <div class="panel panel-default">
         <div class="panel-heading">

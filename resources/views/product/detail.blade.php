@@ -45,7 +45,7 @@
                     <button class="btn btn-outline-dark flex-shrink-0" type="button"
                         onclick="addCart({{ $product->id }})">
                         <i class="bi-cart-fill me-1"></i>
-                        Add to cart
+                        Tambah
                     </button>
                 </div>
                 @endif

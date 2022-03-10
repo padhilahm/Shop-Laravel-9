@@ -16,19 +16,32 @@
             Categories
         </div>
         <div class="panel-body">
-            {{-- {{ $product->category }}
 
-            @foreach ($categories as $category)
-            {{ $category->name }}
-            @endforeach --}}
-
-            <form action="/categories" method="POST">
+            <form action="/categories" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group row">
                     <label for="inputEmail3" class="col-sm-2 col-form-label">Name</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ old('name') }}">
                         @error('name')
+                            <small id="emailHelp" class="form-text text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="inputEmail3" class="col-sm-2 col-form-label">Slug</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="slug" name="slug" placeholder="slug" value="{{ old('slug') }}">
+                        @error('slug')
+                            <small id="emailHelp" class="form-text text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="inputEmail3" class="col-sm-2 col-form-label">Image</label>
+                    <div class="col-sm-10">
+                        <input type="file" class="form-control" id="image" name="image" placeholder="image">
+                        @error('image')
                             <small id="emailHelp" class="form-text text-danger">{{ $message }}</small>
                         @enderror
                     </div>

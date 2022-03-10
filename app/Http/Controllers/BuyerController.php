@@ -96,7 +96,7 @@ class BuyerController extends Controller
         ]);
         Buyer::where('id', $buyer->id)
                 ->update($validate);
-        return redirect('/buyers')->with('success', 'Buyer has been updated');
+        return redirect('/buyers/'.$buyer->id.'/edit')->with('success', 'Buyer has been updated');
     }
 
     /**

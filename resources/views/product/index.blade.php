@@ -1,11 +1,15 @@
 @extends('layouts.app')
 
 @section('container')
- 
+ {{-- {{ request('search') }} --}}
 <div class="container px-4 px-lg-5">
     <div class="row justify-content-center mb-3">
         <div class="col-md-6">
+            @if (Request::is('category*'))
+            <form action="/category/{{ $slug }}" method="get">
+            @else
             <form action="/product" method="get">
+            @endif
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" placeholder="Search..." name="search"
                         value="{{ request('search') }}">

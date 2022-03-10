@@ -21,8 +21,8 @@ class PaymentController extends Controller
     public function index()
     {
         $no = 5;
-        if (isset($_GET['search'])) {
-            $search = $_GET['search'];
+        if (request('search')) {
+            $search = request('search');
             $payments = Payment::where('id', 'like', "%$search%")
                             ->orderByDesc('created_at')
                             ->paginate($no);

@@ -14,7 +14,7 @@
             <label for="inputEmail4">No Pembayaran</label>
 
             <input type="text" class="form-control" id="paymentId" name="paymentId" placeholder="No Pembayaran"
-                value="{{ isset($_GET['no']) ? $_GET['no'] : '' }}">
+                value="{{ request('no') ? request('no') : '' }}">
 
             <small id="paymentIdError" class="form-text text-danger"></small>
             <button type="submit" id="check" class="btn btn-outline-dark mb-5">Cek</button>
@@ -48,7 +48,7 @@
             if (data.code === 400) {
                 console.log(data.error);
                 $('#errorAll').html(data.error);
-            }else if(data.data === null){
+            }else if(data.dataPayment === null){
                 $('#errorAll').html('No pembayaran tidak tersedia');
             }else{
                 let products = data.dataProducts;

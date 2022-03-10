@@ -18,12 +18,22 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $data = array(
-            'products' => Product::orderByDesc('created_at')
-                                ->paginate(8), 
-            'shopName' => Setting::where('name', 'shop-name')->first()->value
-        );
-        return view('home.index', $data);
+        if (request('search')) {
+            $search = request('search');
+            $data = array(
+                'products' => Product::latest()
+                                    ->where('name', 'like', "%$search%")
+                                    ->paginate(8), 
+                'shopName' => Setting::where('name', 'shop-name')->first()->value
+            );
+        }else{
+            $data = array(
+                'products' => Product::latest()
+                                    ->paginate(8), 
+                'shopName' => Setting::where('name', 'shop-name')->first()->value
+            );
+        }
+        return view('product.index', $data);
         // $products = Product::all();
         // return view('products', compact('products'));
     }

@@ -11,7 +11,7 @@
                 <li class="nav-item"><a class="nav-link {{ Request::is('') ? 'active' : '' }} {{ Request::is('/') ? 'active' : '' }}" aria-current="page" href="/">Home</a></li>
                 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ Request::is('product*') ? 'active' : '' }}" id="navbarDropdown" href="#" role="button"
+                    <a class="nav-link dropdown-toggle {{ Request::is('product*') || Request::is('category*') ? 'active' : '' }}" id="navbarDropdown" href="#" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">Toko</a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="/product">Produk</a></li>
@@ -19,7 +19,7 @@
                         <li>
                             <hr class="dropdown-divider" />
                         </li>
-                        <li><a class="dropdown-item" href="#">Kategori</a></li>
+                        <li><a class="dropdown-item" href="/category">Kategori</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">

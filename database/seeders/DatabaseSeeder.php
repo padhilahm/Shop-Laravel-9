@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
     {
         User::factory(1)->create();
         Product::factory(10)->create();
-        Category::factory(2)->create();
+        Category::factory(1)->create();
         
         Setting::create([
             'name' => 'shop-name',

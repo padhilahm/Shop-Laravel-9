@@ -30,6 +30,7 @@
                     <tr>
                         <th scope="col" style="width: 40">#</th>
                         <th scope="col">Name</th>
+                        <th scope="col">Slug</th>
                         <th scope="col">Action</th>
                     </tr>
                 </thead>
@@ -41,6 +42,7 @@
                     <tr>
                         <th scope="row">{{ ++$i }}</th>
                         <td>{{ $category->name }}</td>
+                        <td>{{ $category->slug }}</td>
                         <td><a href="/categories/{{ $category->id }}/edit"><button class="text-warning">Edit</button></a> <form action="/categories/{{ $category->id }}"
                                 method="POST">
                                 @csrf

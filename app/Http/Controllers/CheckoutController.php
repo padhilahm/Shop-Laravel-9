@@ -37,7 +37,7 @@ class CheckoutController extends Controller
 
     public function checkTransaction()
     {
-        if (isset($_GET['no'])) {
+        if (request('no')) {
             session()->forget('cart');
         }
         $data = array(
@@ -299,6 +299,52 @@ class CheckoutController extends Controller
             );
             return response()->json($data, 200);
         }
+
+        
+        if ($request->shippingType == 1) {
+            $shippingType = Setting::where('name', 'delivered')->first()->value;
+            if ($shippingType == 'false') {
+                $data = array(
+                    'code' => 400,
+                    'error' => ''
+                );
+                return response()->json($data, 200);
+            }
+        }
+        
+        if ($request->shippingType == 2) {
+            $shippingType = Setting::where('name', 'take')->first()->value;
+            if ($shippingType == 'false') {
+                $data = array(
+                    'code' => 400,
+                    'error' => ''
+                );
+                return response()->json($data, 200);
+            }
+        }
+        
+        if ($request->paymentType == 1) {
+            $shippingType = Setting::where('name', 'direct')->first()->value;
+            if ($shippingType == 'false') {
+                $data = array(
+                    'code' => 400,
+                    'error' => ''
+                );
+                return response()->json($data, 200);
+            }
+        }
+        
+        if ($request->paymentType == 2) {
+            $shippingType = Setting::where('name', 'cod')->first()->value;
+            if ($shippingType == 'false') {
+                $data = array(
+                    'code' => 400,
+                    'error' => ''
+                );
+                return response()->json($data, 200);
+            }
+        }
+
         
         if ($validator->fails()) {
             $data = array(

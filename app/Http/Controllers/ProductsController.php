@@ -18,8 +18,8 @@ class ProductsController extends Controller
     public function index()
     {
         $no = 5;
-        if (isset($_GET['search'])) {
-            $search = $_GET['search'];
+        if (request('search')) {
+            $search = request('search');
             $product = DB::table('products')
                     ->join('categories', 'products.category_id', '=', 'categories.id')
                     ->selectRaw('products.name, products.stock, products.price, products.id, categories.name as category')
@@ -143,7 +143,7 @@ class ProductsController extends Controller
 
         Product::where('id', $product->id)
                 ->update($validate);
-        return redirect('/products')->with('success', 'Product has been updated');
+        return redirect('/products/'.$product->id.'/edit')->with('success', 'Product has been updated');
     }
 
     /**

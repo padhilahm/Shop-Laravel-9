@@ -35,7 +35,7 @@
 <body>
     @include('layouts.nav')
 
-    @if (Request::is('') || Request::is('/') || Request::is('product'))
+    @if (Request::is('') || Request::is('/') || Request::is('product') )
     <!-- Header-->
     @include('layouts.head')
     @endif

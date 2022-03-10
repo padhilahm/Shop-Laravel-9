@@ -1,18 +1,20 @@
 <?php
 
-use App\Http\Controllers\BuyerController;
-use App\Http\Controllers\CategoriesController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductsController;
-use App\Http\Controllers\SettingController;
-use App\Http\Controllers\ShippingPriceController;
-use App\Http\Controllers\UsersController;
+use App\Models\Product;
 use App\Models\ShippingPrice;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BuyerController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\ShippingPriceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +32,13 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::resource('product', ProductController::class);
+Route::get('', [ProductController::class, 'index']);
 // Route::get('cart', [ProductController::class, 'cart']);
+
+//category
+// Route::resource('category', CategoryController::class);
+Route::get('category/{slug}', [CategoryController::class, 'showProduct']);
+Route::get('category', [CategoryController::class, 'index']);
 
 // cart
 Route::get('cart', [ProductController::class, 'cart'])->name('cart');
@@ -101,9 +109,12 @@ Route::get('setting-delivery', [SettingController::class, 'delivery'])->middlewa
 Route::put('setting-payment-type', [SettingController::class, 'updatePaymentType'])->middleware('auth');
 Route::get('setting-payment-type', [SettingController::class, 'paymentType'])->middleware('auth');
 
+// Route::put('setting-payment-shipping', [SettingController::class, 'updatePaymentShipping'])->middleware('auth');
+// Route::get('setting-payment-shipping', [SettingController::class, 'paymentShipping'])->middleware('auth');
+
 // grouping
-Route::controller(ProductController::class)->group(function () {
-    Route::get('', 'index');
-    // Route::get('/product/{id}', 'index');
-    // Route::post('/orders', 'store');
-});
+// Route::controller(ProductController::class)->group(function () {
+//     Route::get('', 'index');
+//     // Route::get('/product/{id}', 'index');
+//     // Route::post('/orders', 'store');
+// });

@@ -102,7 +102,7 @@ class UsersController extends Controller
         $validate['password'] = Hash::make($validate['password']);
         User::where('id', $user->id)
                     ->update($validate);
-        return redirect('/users')->with('success', 'User has been updated');
+        return redirect('/users/'.$user->id.'/edit')->with('success', 'User has been updated');
     }
 
     /**
